@@ -1,12 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'todo_model.dart';
+import 'todo_provider.dart';
 
-class TodoScreen extends StatelessWidget {
+class TodoScreen extends ConsumerWidget {
   const TodoScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncTodos = ref.watch(todoListProvider);
+
     return Padding(
       padding: const EdgeInsets.all(40.0),
       child: Column(
@@ -25,7 +29,7 @@ class TodoScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '드래그하여 상태를 변경하세요',
+                    '할 일을 추가하고 상태를 변경하세요',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
@@ -56,7 +60,7 @@ class TodoScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _showAddTodoDialog(context, ref),
                     icon: const Icon(Icons.add, size: 18, color: Colors.white),
                     label: const Text(
                       '새 할 일 추가',
@@ -66,7 +70,7 @@ class TodoScreen extends StatelessWidget {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4F46E5), // 인디고 색상
+                      backgroundColor: const Color(0xFF4F46E5),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -83,83 +87,48 @@ class TodoScreen extends StatelessWidget {
           ),
           const SizedBox(height: 32),
 
-          // 2. 칸반 보드 영역 (3개의 컬럼)
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildKanbanColumn(
-                  title: '해야 할 일',
-                  count: 3,
+            child: asyncTodos.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
+              data: (todos) {
+                final todoItems =
+                    todos.where((t) => t.status == TodoStatus.todo).toList();
+                final inProgressItems = todos
+                    .where((t) => t.status == TodoStatus.inProgress)
+                    .toList();
+                final doneItems =
+                    todos.where((t) => t.status == TodoStatus.done).toList();
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTaskCard(
-                      title: '운영체제 3단원 복습',
-                      date: '2026-05-09',
-                      priority: '높음',
-                      tag: '학습',
-                      priorityColor: Colors.red,
+                    _buildKanbanColumn(
+                      context: context,
+                      ref: ref,
+                      title: '해야 할 일',
+                      status: TodoStatus.todo,
+                      items: todoItems,
                     ),
-                    _buildTaskCard(
-                      title: '알고리즘 과제 제출',
-                      date: '2026-05-09',
-                      priority: '높음',
-                      tag: '과제',
-                      priorityColor: Colors.red,
+                    const SizedBox(width: 24),
+                    _buildKanbanColumn(
+                      context: context,
+                      ref: ref,
+                      title: '진행 중',
+                      status: TodoStatus.inProgress,
+                      items: inProgressItems,
                     ),
-                    _buildTaskCard(
-                      title: '데이터베이스 강의 시청',
-                      date: '2026-05-10',
-                      priority: '보통',
-                      tag: '강의',
-                      priorityColor: Colors.orange,
-                    ),
-                    _buildAddCardButton(),
-                  ],
-                ),
-                const SizedBox(width: 24),
-                _buildKanbanColumn(
-                  title: '진행 중',
-                  count: 2,
-                  children: [
-                    _buildTaskCard(
-                      title: '팀 프로젝트 기획서 작성',
-                      date: '2026-05-11',
-                      priority: '보통',
-                      tag: '프로젝트',
-                      priorityColor: Colors.orange,
-                    ),
-                    _buildTaskCard(
-                      title: '영어 에세이 초안 작성',
-                      date: '2026-05-12',
-                      priority: '낮음',
-                      tag: '과제',
-                      priorityColor: Colors.green,
-                    ),
-                    _buildAddCardButton(),
-                  ],
-                ),
-                const SizedBox(width: 24),
-                _buildKanbanColumn(
-                  title: '완료',
-                  count: 2,
-                  children: [
-                    _buildTaskCard(
-                      title: '수학 문제 풀이',
-                      date: '2026-05-08',
-                      priority: '보통',
-                      tag: '학습',
-                      priorityColor: Colors.orange,
-                    ),
-                    _buildTaskCard(
-                      title: '물리 실험 보고서',
-                      date: '2026-05-07',
-                      priority: '높음',
-                      tag: '과제',
-                      priorityColor: Colors.red,
+                    const SizedBox(width: 24),
+                    _buildKanbanColumn(
+                      context: context,
+                      ref: ref,
+                      title: '완료',
+                      status: TodoStatus.done,
+                      items: doneItems,
                     ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
           ),
         ],
@@ -167,65 +136,118 @@ class TodoScreen extends StatelessWidget {
     );
   }
 
-  // ==========================================
-  // 헬퍼 위젯 모음
-  // ==========================================
-
-  // 각 칸반 컬럼 (해야 할 일, 진행 중, 완료)
   Widget _buildKanbanColumn({
+    required BuildContext context,
+    required WidgetRef ref,
     required String title,
-    required int count,
-    required List<Widget> children,
+    required TodoStatus status,
+    required List<TodoItem> items,
   }) {
     return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.transparent, // 배경을 투명하게 하거나 아주 연한 회색으로 할 수 있습니다.
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 컬럼 헤더
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    count.toString(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+      child: DragTarget<TodoItem>(
+        onAcceptWithDetails: (details) async {
+          try {
+            await ref
+                .read(todoListProvider.notifier)
+                .changeStatus(details.data.id, status);
+          } catch (e) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('저장에 실패했습니다: $e')),
+            );
+          }
+        },
+        builder: (context, candidateData, rejectedData) {
+          final isHovering = candidateData.isNotEmpty;
+          return Container(
+            decoration: BoxDecoration(
+              color: isHovering
+                  ? const Color(0xFFF3E8FF).withOpacity(0.5)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: isHovering
+                  ? Border.all(
+                      color: const Color(0xFF6D28D9).withOpacity(0.3),
+                      width: 2,
+                    )
+                  : null,
             ),
-            // 태스크 카드 목록
-            Expanded(child: ListView(children: children)),
-          ],
-        ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        items.length.toString(),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      ...items.map(
+                        (item) => _buildDraggableTaskCard(context, ref, item),
+                      ),
+                      if (status != TodoStatus.done)
+                        _buildAddCardButton(context, ref, status),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  // 개별 할 일 카드
-  Widget _buildTaskCard({
-    required String title,
-    required String date,
-    required String priority,
-    required String tag,
-    required Color priorityColor,
-  }) {
+  Widget _buildDraggableTaskCard(
+    BuildContext context,
+    WidgetRef ref,
+    TodoItem item,
+  ) {
+    final priorityColor = _getPriorityColor(item.priority);
+
+    return Draggable<TodoItem>(
+      data: item,
+      feedback: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 280,
+          child: _buildTaskCardContent(item, priorityColor),
+        ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.3,
+        child: _buildTaskCardContent(item, priorityColor),
+      ),
+      child: GestureDetector(
+        onSecondaryTapUp: (details) {
+          _showContextMenu(context, ref, item, details.globalPosition);
+        },
+        child: _buildTaskCardContent(item, priorityColor),
+      ),
+    );
+  }
+
+  Widget _buildTaskCardContent(TodoItem item, Color priorityColor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -245,7 +267,7 @@ class TodoScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            item.title,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -253,18 +275,21 @@ class TodoScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(date, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+          Text(
+            item.date,
+            style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
               _buildBadge(
-                priority,
+                item.priorityLabel,
                 priorityColor.withOpacity(0.1),
                 priorityColor,
               ),
               const SizedBox(width: 8),
               _buildBadge(
-                tag,
+                item.tag,
                 const Color(0xFFEEF2FF),
                 const Color(0xFF6366F1),
               ),
@@ -275,13 +300,64 @@ class TodoScreen extends StatelessWidget {
     );
   }
 
-  // 카드 추가 버튼 (점선 테두리)
-  Widget _buildAddCardButton() {
+  void _showContextMenu(
+    BuildContext context,
+    WidgetRef ref,
+    TodoItem item,
+    Offset position,
+  ) {
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      items: [
+        if (item.status != TodoStatus.todo)
+          const PopupMenuItem(value: 'todo', child: Text('→ 해야 할 일로 이동')),
+        if (item.status != TodoStatus.inProgress)
+          const PopupMenuItem(value: 'inProgress', child: Text('→ 진행 중으로 이동')),
+        if (item.status != TodoStatus.done)
+          const PopupMenuItem(value: 'done', child: Text('→ 완료로 이동')),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'delete',
+          child: Text('삭제', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    ).then((value) async {
+      if (value == null || !context.mounted) return;
+      try {
+        if (value == 'delete') {
+          await ref.read(todoListProvider.notifier).deleteTodo(item.id);
+        } else {
+          final newStatus = TodoStatus.values.byName(value);
+          await ref
+              .read(todoListProvider.notifier)
+              .changeStatus(item.id, newStatus);
+        }
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장에 실패했습니다: $e')),
+        );
+      }
+    });
+  }
+
+  Widget _buildAddCardButton(
+    BuildContext context,
+    WidgetRef ref,
+    TodoStatus status,
+  ) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () {},
+        onTap: () => _showAddTodoDialog(context, ref, initialStatus: status),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -304,7 +380,292 @@ class TodoScreen extends StatelessWidget {
     );
   }
 
-  // 뱃지 (우선순위, 태그 등)
+  void _showAddTodoDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    TodoStatus initialStatus = TodoStatus.todo,
+  }) {
+    final titleController = TextEditingController();
+    final tagController = TextEditingController();
+    TodoPriority selectedPriority = TodoPriority.medium;
+    TodoStatus selectedStatus = initialStatus;
+    DateTime selectedDate = DateTime.now();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: const Text(
+                '새 할 일 추가',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              content: SizedBox(
+                width: 440,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        labelText: '할 일 제목',
+                        hintText: '예: 운영체제 3단원 복습',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF6D28D9)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    TextField(
+                      controller: tagController,
+                      decoration: InputDecoration(
+                        labelText: '태그',
+                        hintText: '예: 학습, 과제, 프로젝트',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF6D28D9)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 날짜 선택
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                        );
+                        if (picked != null) {
+                          setDialogState(() => selectedDate = picked);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              size: 18,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 우선순위 선택
+                    const Text(
+                      '우선순위',
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: TodoPriority.values.map((p) {
+                        final isSelected = selectedPriority == p;
+                        final color = _getPriorityColor(p);
+                        final label = switch (p) {
+                          TodoPriority.high => '높음',
+                          TodoPriority.medium => '보통',
+                          TodoPriority.low => '낮음',
+                        };
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(label),
+                            selected: isSelected,
+                            onSelected: (_) {
+                              setDialogState(() => selectedPriority = p);
+                            },
+                            selectedColor: color.withOpacity(0.2),
+                            labelStyle: TextStyle(
+                              color: isSelected ? color : Colors.grey.shade600,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(
+                                color: isSelected ? color : Colors.grey.shade300,
+                              ),
+                            ),
+                            showCheckmark: false,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 상태 선택
+                    const Text(
+                      '상태',
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildStatusChip(
+                          '해야 할 일',
+                          TodoStatus.todo,
+                          selectedStatus,
+                          (s) => setDialogState(() => selectedStatus = s),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatusChip(
+                          '진행 중',
+                          TodoStatus.inProgress,
+                          selectedStatus,
+                          (s) => setDialogState(() => selectedStatus = s),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildStatusChip(
+                          '완료',
+                          TodoStatus.done,
+                          selectedStatus,
+                          (s) => setDialogState(() => selectedStatus = s),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    '취소',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final title = titleController.text.trim();
+                    if (title.isEmpty) return;
+
+                    final dateStr =
+                        '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+
+                    final newTodo = TodoItem(
+                      title: title,
+                      date: dateStr,
+                      priority: selectedPriority,
+                      tag: tagController.text.trim().isEmpty
+                          ? '일반'
+                          : tagController.text.trim(),
+                      status: selectedStatus,
+                    );
+
+                    try {
+                      await ref
+                          .read(todoListProvider.notifier)
+                          .addTodo(newTodo);
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
+                    } catch (e) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('저장에 실패했습니다: $e')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F46E5),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                  ),
+                  child: const Text(
+                    '추가',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStatusChip(
+    String label,
+    TodoStatus status,
+    TodoStatus selectedStatus,
+    void Function(TodoStatus) onSelected,
+  ) {
+    final isSelected = status == selectedStatus;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onSelected(status),
+      selectedColor: const Color(0xFF6D28D9).withOpacity(0.15),
+      labelStyle: TextStyle(
+        color: isSelected ? const Color(0xFF6D28D9) : Colors.grey.shade600,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? const Color(0xFF6D28D9) : Colors.grey.shade300,
+        ),
+      ),
+      showCheckmark: false,
+    );
+  }
+
+  Color _getPriorityColor(TodoPriority priority) {
+    switch (priority) {
+      case TodoPriority.high:
+        return Colors.red;
+      case TodoPriority.medium:
+        return Colors.orange;
+      case TodoPriority.low:
+        return Colors.green;
+    }
+  }
+
   Widget _buildBadge(String text, Color bgColor, Color textColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
