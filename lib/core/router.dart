@@ -7,6 +7,7 @@ import '../features/keepurl.dart';
 import '../features/diary.dart';
 import '../features/exammode.dart';
 import '../features/aicoach.dart';
+import '../features/mypage.dart';
 
 // GoRouter 설정
 final GoRouter appRouter = GoRouter(
@@ -46,6 +47,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/ai_coach',
           builder: (context, state) => const AiCoachScreen(),
+        ),
+        GoRoute(
+          path: '/mypage',
+          builder: (context, state) => const MyPageScreen(),
         ),
       ],
     ),
