@@ -254,7 +254,7 @@ class AiCoachScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         ...recommendations
                             .map((rec) => _buildRecommendationCard(rec))
-                            .toList(),
+                            ,
                       ],
                     ],
                   ),

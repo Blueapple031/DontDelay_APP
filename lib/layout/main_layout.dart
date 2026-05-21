@@ -5,8 +5,7 @@ class MainLayout extends StatelessWidget {
   final Widget child;
   final String currentPath;
 
-  MainLayout({Key? key, required this.child, required this.currentPath})
-    : super(key: key);
+  MainLayout({super.key, required this.child, required this.currentPath});
 
   // 사이드바 메뉴 리스트
   final List<Map<String, dynamic>> _menuItems = [
