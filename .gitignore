@@ -102,3 +102,9 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# 추가 내용 5.22
+# 플랫폼별 자동 생성 플러그인 설정 파일 무시 (팀 협업 충돌 방지)
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+macos/Flutter/GeneratedPluginRegistrant.swift
