@@ -1,4 +1,6 @@
 import 'package:go_router/go_router.dart';
+import '../features/auth/login.dart';
+import '../features/auth/signup.dart';
 import '../layout/main_layout.dart';
 import '../features/dashboard.dart';
 import '../features/todo/todo.dart';
@@ -7,12 +9,22 @@ import '../features/keepurl.dart';
 import '../features/diary.dart';
 import '../features/exammode.dart';
 import '../features/aicoach.dart';
+import '../features/mypage.dart';
+
 
 // GoRouter 설정
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/dashboard', // 앱을 처음 켰을 때 보여줄 경로
-
+  initialLocation: '/login', // 앱 시작 시 가장 먼저 로그인 화면으로 이동
   routes: [
+    // 1. 로그인 화면 (ShellRoute 바깥이므로 사이드바 없음)
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const SignUpScreen(),
+    ),
     ShellRoute(
       builder: (context, state, child) {
         return MainLayout(
@@ -46,6 +58,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/ai_coach',
           builder: (context, state) => const AiCoachScreen(),
+        ),
+        GoRoute(
+          path: '/mypage',
+          builder: (context, state) => const MyPageScreen(),
         ),
       ],
     ),

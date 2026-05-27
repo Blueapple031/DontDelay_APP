@@ -5,8 +5,7 @@ class MainLayout extends StatelessWidget {
   final Widget child;
   final String currentPath;
 
-  MainLayout({Key? key, required this.child, required this.currentPath})
-    : super(key: key);
+  MainLayout({super.key, required this.child, required this.currentPath});
 
   // 사이드바 메뉴 리스트
   final List<Map<String, dynamic>> _menuItems = [
@@ -21,6 +20,7 @@ class MainLayout extends StatelessWidget {
     {'title': '일기', 'icon': Icons.book_outlined, 'path': '/diary'},
     {'title': '시험기간 모드', 'icon': Icons.school_outlined, 'path': '/exam_mode'},
     {'title': 'AI 코치', 'icon': Icons.smart_toy_outlined, 'path': '/ai_coach'},
+    {'title': '마이페이지', 'icon': Icons.person_outline, 'path': '/mypage'},
   ];
 
   @override
@@ -30,7 +30,7 @@ class MainLayout extends StatelessWidget {
         children: [
           // 1. 좌측 사이드바 영역
           Container(
-            width: 240,
+            width: 220,
             color: Colors.white,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,8 +38,8 @@ class MainLayout extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.all(24.0),
                   child: Text(
-                    '안미룬이\nAI Study Coach',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    'DontDelay',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Expanded(
@@ -88,6 +88,7 @@ class MainLayout extends StatelessWidget {
                                 item['path'] == '/calendar' ||
                                 item['path'] == '/keepurl' ||
                                 item['path'] == '/diary' ||
+                                item['path'] == '/mypage' ||
                                 item['path'] == '/exam_mode' ||
                                 item['path'] == '/ai_coach') {
                               context.go(item['path']);
