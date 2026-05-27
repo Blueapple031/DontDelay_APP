@@ -3,13 +3,15 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'url_folder_model.dart';
+import 'url_folder_service.dart';
 import 'url_model.dart';
 
-/// OS별 [getApplicationDocumentsDirectory] 아래 `DontDelay/urls.json`에
-/// URL 목록을 JSON으로 저장합니다.
 class UrlService {
   static const _appFolderName = 'DontDelay';
   static const _fileName = 'urls.json';
+
+  final UrlFolderService _folderService = UrlFolderService();
 
   Future<File> get _file async {
     final dir = await getApplicationDocumentsDirectory();
@@ -21,6 +23,9 @@ class UrlService {
   }
 
   Future<List<UrlItem>> loadUrls() async {
+    final folders = await _folderService.loadFolders();
+    final defaultFolder = _folderService.defaultFolder(folders);
+
     final file = await _file;
     if (!await file.exists()) {
       return [];
@@ -41,16 +46,36 @@ class UrlService {
       );
     }
     try {
-      return decoded
-          .cast<Map<String, dynamic>>()
-          .map(UrlItem.fromJson)
-          .toList();
+      return decoded.cast<Map<String, dynamic>>().map((raw) {
+        return _parseItem(raw, folders, defaultFolder);
+      }).toList();
     } catch (e, st) {
       Error.throwWithStackTrace(
         UrlStorageException('URL 데이터 형식이 올바르지 않습니다: $e'),
         st,
       );
     }
+  }
+
+  UrlItem _parseItem(
+    Map<String, dynamic> raw,
+    List<UrlFolder> folders,
+    UrlFolder defaultFolder,
+  ) {
+    var folderId = raw['folderId'] as String?;
+    if (folderId == null || folderId.isEmpty) {
+      final legacyCategory = raw['category'] as String?;
+      if (legacyCategory != null) {
+        final folder = _folderService.findByName(folders, legacyCategory);
+        folderId = folder?.id ?? defaultFolder.id;
+      } else {
+        final url = raw['url'] as String;
+        final inferred = UrlItem.inferFolderNameFromUrl(url);
+        final folder = _folderService.findByName(folders, inferred);
+        folderId = folder?.id ?? defaultFolder.id;
+      }
+    }
+    return UrlItem.fromJson({...raw, 'folderId': folderId});
   }
 
   Future<void> saveUrls(List<UrlItem> urls) async {
@@ -66,6 +91,20 @@ class UrlService {
       (u) =>
           u.id != excludeId && UrlItem.normalizeUrl(u.url) == normalized,
     );
+  }
+
+  String resolveFolderId({
+    required List<UrlFolder> folders,
+    required String url,
+    String? explicitFolderId,
+  }) {
+    if (explicitFolderId != null && explicitFolderId.isNotEmpty) {
+      return explicitFolderId;
+    }
+    final inferredName = UrlItem.inferFolderNameFromUrl(url);
+    final folder = _folderService.findByName(folders, inferredName);
+    if (folder != null) return folder.id;
+    return _folderService.defaultFolder(folders).id;
   }
 }
 

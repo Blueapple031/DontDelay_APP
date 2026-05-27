@@ -1,5 +1,7 @@
 const portInput = document.getElementById('port');
 const tokenInput = document.getElementById('token');
+const useMemo = document.getElementById('useMemo');
+const memoEl = document.getElementById('memo');
 const saveBtn = document.getElementById('saveBtn');
 const testBtn = document.getElementById('testBtn');
 const statusEl = document.getElementById('status');
@@ -26,6 +28,10 @@ function showStatus(message, ok) {
   statusEl.textContent = message;
   statusEl.className = ok ? 'ok' : 'err';
 }
+
+useMemo.addEventListener('change', () => {
+  memoEl.style.display = useMemo.checked ? 'block' : 'none';
+});
 
 portInput.addEventListener('change', saveSettings);
 tokenInput.addEventListener('change', saveSettings);
@@ -54,57 +60,18 @@ saveBtn.addEventListener('click', async () => {
     return;
   }
 
-  const port = Number(portInput.value) || 17823;
-  const token = tokenInput.value.trim();
+  const memo = useMemo.checked ? memoEl.value.trim() : '';
+  const result = await saveUrlToDontDelay({
+    url: tab.url,
+    title: tab.title || tab.url,
+    memo,
+  });
 
-  if (!token) {
-    showStatus('토큰을 입력해 주세요.', false);
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://127.0.0.1:${port}/api/urls`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        url: tab.url,
-        title: tab.title || tab.url,
-        source: 'extension',
-      }),
-    });
-
-    const body = await response.json().catch(() => ({}));
-
-    if (response.status === 201) {
-      showStatus('URL이 저장되었습니다.', true);
-      await chrome.storage.local.set({
-        lastSaved: {
-          url: tab.url,
-          title: tab.title || tab.url,
-          at: new Date().toISOString(),
-        },
-      });
-      lastSavedEl.style.display = 'block';
-      lastSavedEl.textContent = `최근 저장: ${tab.title || tab.url}`;
-      return;
-    }
-
-    if (response.status === 409) {
-      showStatus('이미 저장된 URL입니다.', false);
-      return;
-    }
-
-    if (response.status === 401) {
-      showStatus('토큰이 올바르지 않습니다.', false);
-      return;
-    }
-
-    showStatus(body.message || `저장 실패 (${response.status})`, false);
-  } catch (_) {
-    showStatus('DontDelay 앱이 실행 중인지 확인해 주세요.', false);
+  showStatus(result.message, result.ok);
+  if (result.ok) {
+    lastSavedEl.style.display = 'block';
+    lastSavedEl.textContent = `최근 저장: ${tab.title || tab.url}`;
+    if (useMemo.checked) memoEl.value = '';
   }
 });
 

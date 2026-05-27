@@ -13,17 +13,18 @@ typedef UrlApiAddHandler = Future<UrlAddResult> Function({
   required String url,
   required String title,
   required String source,
+  String memo,
 });
 
 class UrlApiServer {
   UrlApiServer({
     required UrlConnectionService connectionService,
-    required UrlApiAddHandler onAddUrl,
+    required UrlApiAddHandler Function() resolveOnAddUrl,
   })  : _connectionService = connectionService,
-        _onAddUrl = onAddUrl;
+        _resolveOnAddUrl = resolveOnAddUrl;
 
   final UrlConnectionService _connectionService;
-  final UrlApiAddHandler _onAddUrl;
+  final UrlApiAddHandler Function() _resolveOnAddUrl;
 
   HttpServer? _server;
   UrlConnectionConfig? _config;
@@ -100,16 +101,18 @@ class UrlApiServer {
     final url = data['url'] as String? ?? '';
     final title = data['title'] as String? ?? '';
     final source = data['source'] as String? ?? 'extension';
+    final memo = data['memo'] as String? ?? '';
 
-    if (!UrlItem.isValidHttpUrl(url)) {
+    if (!UrlItem.isValidSavableUrl(url)) {
       return _jsonResponse(400, {'message': 'invalid url'});
     }
 
     try {
-      final result = await _onAddUrl(
+      final result = await _resolveOnAddUrl()(
         url: url,
         title: title,
         source: source,
+        memo: memo,
       );
 
       switch (result) {

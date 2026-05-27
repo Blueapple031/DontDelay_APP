@@ -3,65 +3,42 @@ import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
 
-const kUrlFilterCategories = ['전체', '개발', '전공', '학습법', '자기계발'];
-const kUrlSaveCategories = ['미분류', '개발', '전공', '학습법', '자기계발'];
-
 enum UrlAddResult { saved, duplicate, invalid }
-
-class UrlClassification {
-  final String category;
-  final List<String> tags;
-  final String iconType;
-
-  const UrlClassification({
-    required this.category,
-    required this.tags,
-    required this.iconType,
-  });
-}
 
 class UrlItem {
   final String id;
   final String url;
   final String title;
-  final String category;
-  final List<String> tags;
+  final String? _folderId;
+  final String? _memo;
   final bool watchLater;
-  final String source;
+  final String? _source;
   final DateTime savedAt;
-  final String iconType;
+  final String? _iconType;
+
+  /// Hot reload로 구 인스턴스가 남아도 null 접근 시 크래시 방지
+  String get folderId => _folderId ?? '';
+  String get memo => _memo ?? '';
+  String get source => _source ?? 'manual';
+  String get iconType => _iconType ?? inferIconType(url);
 
   UrlItem({
     String? id,
     required String url,
     required this.title,
-    String category = '미분류',
-    List<String>? tags,
+    required String folderId,
+    String memo = '',
     this.watchLater = false,
-    this.source = 'manual',
+    String source = 'manual',
     DateTime? savedAt,
     String? iconType,
   })  : id = id ?? _uuid.v4(),
         savedAt = savedAt ?? DateTime.now(),
         url = normalizeUrl(url),
-        category = _resolveMetadata(
-          url,
-          category: category,
-          tags: tags,
-          iconType: iconType,
-        ).category,
-        tags = _resolveMetadata(
-          url,
-          category: category,
-          tags: tags,
-          iconType: iconType,
-        ).tags,
-        iconType = _resolveMetadata(
-          url,
-          category: category,
-          tags: tags,
-          iconType: iconType,
-        ).iconType;
+        _folderId = folderId,
+        _memo = memo,
+        _source = source,
+        _iconType = iconType;
 
   static String normalizeUrl(String raw) {
     final trimmed = raw.trim();
@@ -77,10 +54,15 @@ class UrlItem {
     return uri.replace(path: path.isEmpty ? '/' : path).toString();
   }
 
-  static bool isValidHttpUrl(String raw) {
-    final uri = Uri.tryParse(raw.trim());
-    if (uri == null || !uri.hasScheme || !uri.hasAuthority) return false;
-    return uri.scheme == 'http' || uri.scheme == 'https';
+  /// http(s)뿐 아니라 chrome://, edge://, about:, file: 등도 보관 가능
+  static bool isValidSavableUrl(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return false;
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || !uri.hasScheme) return false;
+    const blocked = {'javascript', 'data', 'blob', 'vbscript'};
+    if (blocked.contains(uri.scheme.toLowerCase())) return false;
+    return true;
   }
 
   static String _host(String url) {
@@ -92,156 +74,79 @@ class UrlItem {
     return host == pattern || host.endsWith('.$pattern');
   }
 
-  static UrlClassification classifyFromUrl(String url) {
+  /// 도메인 기반 폴더 이름 추론
+  static String inferFolderNameFromUrl(String url) {
     final host = _host(url);
     final lower = url.toLowerCase();
 
     if (_hostMatches(host, 'youtube.com') ||
         _hostMatches(host, 'youtu.be') ||
         _hostMatches(host, 'vimeo.com')) {
-      return const UrlClassification(
-        category: '학습법',
-        tags: ['YouTube'],
-        iconType: 'youtube',
-      );
+      return 'YouTube';
     }
-
-    if (_hostMatches(host, 'instagram.com')) {
-      return const UrlClassification(
-        category: '자기계발',
-        tags: ['Instagram'],
-        iconType: 'social',
-      );
-    }
-
+    if (_hostMatches(host, 'instagram.com')) return 'Instagram';
     if (_hostMatches(host, 'github.com') ||
         _hostMatches(host, 'gitlab.com') ||
         _hostMatches(host, 'stackoverflow.com') ||
         _hostMatches(host, 'velog.io') ||
         _hostMatches(host, 'tistory.com') ||
         _hostMatches(host, 'nomadcoders.co')) {
-      return UrlClassification(
-        category: '개발',
-        tags: [_platformTag(host)],
-        iconType: 'web',
-      );
+      return '개발';
     }
-
     if (_hostMatches(host, 'notion.so') ||
         _hostMatches(host, 'notion.site')) {
-      return const UrlClassification(
-        category: '학습법',
-        tags: ['Notion'],
-        iconType: 'web',
-      );
+      return '학습법';
     }
-
     if (_hostMatches(host, 'arxiv.org') ||
         _hostMatches(host, 'semanticscholar.org') ||
         _hostMatches(host, 'scholar.google.com')) {
-      return const UrlClassification(
-        category: '전공',
-        tags: ['논문'],
-        iconType: 'document',
-      );
+      return '전공';
     }
-
     if (_hostMatches(host, 'inflearn.com') ||
         _hostMatches(host, 'coursera.org') ||
         _hostMatches(host, 'udemy.com') ||
         _hostMatches(host, 'fastcampus.co.kr')) {
-      return UrlClassification(
-        category: '학습법',
-        tags: [_platformTag(host)],
-        iconType: 'web',
-      );
+      return '학습법';
     }
-
     if (_hostMatches(host, 'twitter.com') ||
         _hostMatches(host, 'x.com') ||
         _hostMatches(host, 'tiktok.com')) {
-      return UrlClassification(
-        category: '자기계발',
-        tags: [_platformTag(host)],
-        iconType: 'social',
-      );
+      return '자기계발';
     }
-
     if (_hostMatches(host, 'naver.com') && lower.contains('blog')) {
-      return const UrlClassification(
-        category: '학습법',
-        tags: ['Naver Blog'],
-        iconType: 'web',
-      );
+      return '학습법';
     }
-
     if (RegExp(r'\.(pdf|doc|docx|ppt|pptx|xls|xlsx)(\?|$)', caseSensitive: false)
         .hasMatch(lower)) {
-      return const UrlClassification(
-        category: '전공',
-        tags: ['문서'],
-        iconType: 'document',
-      );
+      return '전공';
     }
-
-    return const UrlClassification(
-      category: '미분류',
-      tags: [],
-      iconType: 'web',
-    );
-  }
-
-  static String _platformTag(String host) {
-    if (host.contains('github')) return 'GitHub';
-    if (host.contains('gitlab')) return 'GitLab';
-    if (host.contains('stackoverflow')) return 'Stack Overflow';
-    if (host.contains('velog')) return 'Velog';
-    if (host.contains('tistory')) return 'Tistory';
-    if (host.contains('inflearn')) return 'Inflearn';
-    if (host.contains('coursera')) return 'Coursera';
-    if (host.contains('udemy')) return 'Udemy';
-    if (host.contains('fastcampus')) return 'Fastcampus';
-    if (host.contains('twitter') || host == 'x.com') return 'X';
-    if (host.contains('tiktok')) return 'TikTok';
-    if (host.contains('nomadcoders')) return 'Nomad Coders';
-    return host.split('.').first;
-  }
-
-  static UrlClassification _resolveMetadata(
-    String rawUrl, {
-    required String category,
-    List<String>? tags,
-    String? iconType,
-  }) {
-    final normalized = normalizeUrl(rawUrl);
-    final userTags = tags ?? const [];
-
-    if (category != '미분류' || userTags.isNotEmpty) {
-      return UrlClassification(
-        category: category,
-        tags: userTags,
-        iconType: iconType ?? inferIconType(normalized),
-      );
-    }
-
-    final auto = classifyFromUrl(normalized);
-    if (auto.category != '미분류') {
-      return UrlClassification(
-        category: auto.category,
-        tags: auto.tags,
-        iconType: iconType ?? auto.iconType,
-      );
-    }
-
-    return UrlClassification(
-      category: category,
-      tags: userTags,
-      iconType: iconType ?? inferIconType(normalized),
-    );
+    return '미분류';
   }
 
   static String inferIconType(String url) {
-    return classifyFromUrl(url).iconType;
+    final scheme = Uri.tryParse(url)?.scheme.toLowerCase() ?? '';
+    if (scheme == 'chrome' || scheme == 'edge' || scheme == 'about') {
+      return 'internal';
+    }
+
+    final host = _host(url);
+    final lower = url.toLowerCase();
+    if (_hostMatches(host, 'youtube.com') ||
+        _hostMatches(host, 'youtu.be') ||
+        _hostMatches(host, 'vimeo.com')) {
+      return 'youtube';
+    }
+    if (_hostMatches(host, 'instagram.com') ||
+        _hostMatches(host, 'twitter.com') ||
+        _hostMatches(host, 'x.com') ||
+        _hostMatches(host, 'tiktok.com')) {
+      return 'social';
+    }
+    if (RegExp(r'\.(pdf|doc|docx|ppt|pptx|xls|xlsx)(\?|$)', caseSensitive: false)
+        .hasMatch(lower)) {
+      return 'document';
+    }
+    return 'web';
   }
 
   IconData get icon {
@@ -252,6 +157,8 @@ class UrlItem {
         return Icons.description_outlined;
       case 'social':
         return Icons.photo_camera_outlined;
+      case 'internal':
+        return Icons.extension_outlined;
       default:
         return Icons.language;
     }
@@ -265,8 +172,8 @@ class UrlItem {
   UrlItem copyWith({
     String? url,
     String? title,
-    String? category,
-    List<String>? tags,
+    String? folderId,
+    String? memo,
     bool? watchLater,
     String? source,
   }) {
@@ -275,8 +182,8 @@ class UrlItem {
       id: id,
       url: nextUrl,
       title: title ?? this.title,
-      category: category ?? this.category,
-      tags: tags ?? this.tags,
+      folderId: folderId ?? this.folderId,
+      memo: memo ?? this.memo,
       watchLater: watchLater ?? this.watchLater,
       source: source ?? this.source,
       savedAt: savedAt,
@@ -289,8 +196,8 @@ class UrlItem {
       'id': id,
       'url': url,
       'title': title,
-      'category': category,
-      'tags': tags,
+      'folderId': folderId,
+      'memo': memo,
       'watchLater': watchLater,
       'source': source,
       'savedAt': savedAt.toIso8601String(),
@@ -305,11 +212,8 @@ class UrlItem {
       id: json['id'] as String,
       url: url,
       title: json['title'] as String,
-      category: json['category'] as String? ?? '미분류',
-      tags: (json['tags'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          const [],
+      folderId: json['folderId'] as String? ?? '',
+      memo: json['memo'] as String? ?? '',
       watchLater: json['watchLater'] as bool? ?? false,
       source: json['source'] as String? ?? 'manual',
       savedAt: rawSaved is String ? DateTime.parse(rawSaved) : DateTime.now(),

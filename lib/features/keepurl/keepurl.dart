@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'url_folder_model.dart';
+import 'url_folder_provider.dart';
 import 'url_connection_service.dart';
 import 'url_model.dart';
 import 'url_opener.dart';
@@ -51,7 +53,7 @@ class UrlScreen extends ConsumerStatefulWidget {
 }
 
 class _UrlScreenState extends ConsumerState<UrlScreen> {
-  int _selectedCategoryIndex = 0;
+  String? _selectedFolderId;
   final _searchController = TextEditingController();
   String _searchQuery = '';
   bool _watchLaterOnly = false;
@@ -67,9 +69,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
   List<UrlItem> _filterUrls(List<UrlItem> urls) {
     var result = urls;
 
-    if (_selectedCategoryIndex > 0) {
-      final category = kUrlFilterCategories[_selectedCategoryIndex];
-      result = result.where((u) => u.category == category).toList();
+    if (_selectedFolderId != null) {
+      result =
+          result.where((u) => u.folderId == _selectedFolderId).toList();
     }
 
     if (_watchLaterOnly) {
@@ -80,8 +82,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     if (q.isNotEmpty) {
       result = result.where((u) {
         if (u.title.toLowerCase().contains(q)) return true;
-        if (u.url.toLowerCase().contains(q)) return true;
-        return u.tags.any((t) => t.toLowerCase().contains(q));
+        return u.url.toLowerCase().contains(q);
       }).toList();
     }
 
@@ -89,9 +90,17 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     return result;
   }
 
+  String _folderName(List<UrlFolder> folders, String folderId) {
+    for (final f in folders) {
+      if (f.id == folderId) return f.name;
+    }
+    return UrlFolder.defaultFolderName;
+  }
+
   @override
   Widget build(BuildContext context) {
     final asyncUrls = ref.watch(urlListProvider);
+    final asyncFolders = ref.watch(urlFolderListProvider);
     final serverState = ref.watch(urlApiServerStateProvider);
     final asyncConnection = ref.watch(urlConnectionProvider);
 
@@ -154,6 +163,21 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => _showAddFolderDialog(context),
+                    icon: const Icon(Icons.create_new_folder_outlined, size: 18),
+                    label: const Text('폴더 추가'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   ElevatedButton.icon(
                     onPressed: () => _showAddUrlDialog(context),
                     icon: const Icon(Icons.add, size: 18, color: Colors.white),
@@ -192,7 +216,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                   controller: _searchController,
                   onChanged: (v) => setState(() => _searchQuery = v),
                   decoration: InputDecoration(
-                    hintText: '제목, 태그, URL로 검색...',
+                    hintText: '제목, URL로 검색...',
                     hintStyle: TextStyle(color: Colors.grey.shade400),
                     prefixIcon:
                         Icon(Icons.search, color: Colors.grey.shade400),
@@ -251,93 +275,20 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(kUrlFilterCategories.length, (index) {
-                final isSelected = _selectedCategoryIndex == index;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: ChoiceChip(
-                    label: Text(kUrlFilterCategories[index]),
-                    selected: isSelected,
-                    onSelected: (_) {
-                      setState(() => _selectedCategoryIndex = index);
-                    },
-                    selectedColor: const Color(0xFF6D28D9),
-                    backgroundColor: Colors.white,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: isSelected
-                            ? const Color(0xFF6D28D9)
-                            : Colors.grey.shade300,
-                      ),
-                    ),
-                    showCheckmark: false,
-                  ),
-                );
-              }),
+          asyncFolders.when(
+            loading: () => const SizedBox(
+              height: 40,
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
+            error: (e, _) => Text('폴더를 불러올 수 없습니다: $e'),
+            data: (folders) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.auto_awesome, color: Colors.white, size: 24),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'AI 자동 분류',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '저장된 URL을 자동으로 카테고리와 태그로 분류합니다',
-                        style: TextStyle(color: Colors.white, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('AI 자동 분류는 준비 중입니다.')),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF6D28D9),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    '준비 중',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                _buildFolderBar(folders),
+                const SizedBox(height: 6),
+                Text(
+                  'URL 카드를 길게 눌러 폴더 칩 위에 놓으면 이동합니다',
+                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                 ),
               ],
             ),
@@ -348,6 +299,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
               data: (urls) {
+                final folders = asyncFolders.value ?? [];
                 final filtered = _filterUrls(urls);
                 if (filtered.isEmpty) {
                   return Center(
@@ -369,20 +321,105 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                 }
                 return GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 24,
-                    mainAxisSpacing: 24,
-                    childAspectRatio: 2.2,
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 2.65,
                   ),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
-                    return _buildUrlCard(context, filtered[index]);
+                    return _buildUrlCard(context, filtered[index], folders);
                   },
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFolderBar(List<UrlFolder> folders) {
+    return Row(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFolderChip(null, '전체'),
+                ...folders.map((f) => _buildFolderChip(f.id, f.name)),
+              ],
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: '폴더 관리',
+          onPressed: () => _showManageFoldersDialog(context, folders),
+          icon: const Icon(Icons.folder_open_outlined),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFolderChip(String? folderId, String label) {
+    final isSelected = _selectedFolderId == folderId;
+    final chip = ChoiceChip(
+      avatar: folderId != null
+          ? const Icon(Icons.folder_outlined, size: 16)
+          : null,
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => setState(() => _selectedFolderId = folderId),
+      selectedColor: const Color(0xFF6D28D9),
+      backgroundColor: Colors.white,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Colors.black87,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected
+              ? const Color(0xFF6D28D9)
+              : Colors.grey.shade300,
+        ),
+      ),
+      showCheckmark: false,
+    );
+
+    if (folderId == null) {
+      return Padding(padding: const EdgeInsets.only(right: 8), child: chip);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: DragTarget<String>(
+        onWillAcceptWithDetails: (details) => details.data.isNotEmpty,
+        onAcceptWithDetails: (details) async {
+          await ref
+              .read(urlListProvider.notifier)
+              .moveToFolder(details.data, folderId);
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('"$label" 폴더로 이동했습니다.')),
+          );
+        },
+        builder: (context, candidate, rejected) {
+          final isHover = candidate.isNotEmpty;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            padding: isHover ? const EdgeInsets.all(2) : EdgeInsets.zero,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              border: isHover
+                  ? Border.all(color: const Color(0xFF6D28D9), width: 2)
+                  : null,
+              color: isHover ? const Color(0xFFF5F3FF) : null,
+            ),
+            child: chip,
+          );
+        },
       ),
     );
   }
@@ -559,10 +596,11 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
   }
 
   Future<void> _showAddUrlDialog(BuildContext context) async {
+    final folders = ref.read(urlFolderListProvider).value ?? [];
     final urlController = TextEditingController();
     final titleController = TextEditingController();
-    final tagsController = TextEditingController();
-    var category = kUrlSaveCategories.first;
+    final memoController = TextEditingController();
+    var selectedFolderId = ''; // 빈 값 = 도메인 자동 분류
     var watchLater = false;
 
     final saved = await showDialog<bool>(
@@ -594,24 +632,35 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      initialValue: category,
-                      decoration: const InputDecoration(labelText: '카테고리'),
-                      items: kUrlSaveCategories
-                          .map(
-                            (c) => DropdownMenuItem(value: c, child: Text(c)),
-                          )
-                          .toList(),
+                      initialValue: selectedFolderId,
+                      decoration: const InputDecoration(
+                        labelText: '폴더',
+                        helperText: '자동 선택 시 URL 도메인으로 폴더가 정해집니다',
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: '',
+                          child: Text('자동 (도메인 분류)'),
+                        ),
+                        ...folders.map(
+                          (f) => DropdownMenuItem(
+                            value: f.id,
+                            child: Text(f.name),
+                          ),
+                        ),
+                      ],
                       onChanged: (v) {
-                        if (v != null) setDialogState(() => category = v);
+                        setDialogState(() => selectedFolderId = v ?? '');
                       },
                     ),
                     const SizedBox(height: 12),
                     TextField(
-                      controller: tagsController,
+                      controller: memoController,
                       decoration: const InputDecoration(
-                        labelText: '태그',
-                        hintText: '쉼표로 구분 (예: React, Frontend)',
+                        labelText: '메모 (선택)',
+                        hintText: '나중에 볼 때 참고할 내용',
                       ),
+                      maxLines: 2,
                     ),
                     const SizedBox(height: 8),
                     CheckboxListTile(
@@ -645,33 +694,25 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     if (saved != true) return;
 
     final url = urlController.text.trim();
-    if (!UrlItem.isValidHttpUrl(url)) {
+    if (!UrlItem.isValidSavableUrl(url)) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('올바른 http/https URL을 입력해 주세요.')),
+          const SnackBar(content: Text('저장할 수 있는 URL 형식이 아닙니다.')),
         );
       }
       return;
     }
 
-    final tags = tagsController.text
-        .split(',')
-        .map((t) => t.trim())
-        .where((t) => t.isNotEmpty)
-        .toList();
-
     final title = titleController.text.trim();
-    final item = UrlItem(
-      url: url,
-      title: title.isEmpty ? url : title,
-      category: category,
-      tags: tags,
-      watchLater: watchLater,
-      source: 'manual',
-    );
 
     try {
-      await ref.read(urlListProvider.notifier).addUrl(item);
+      await ref.read(urlListProvider.notifier).addUrl(
+            url: url,
+            title: title.isEmpty ? url : title,
+            folderId: selectedFolderId.isEmpty ? null : selectedFolderId,
+            memo: memoController.text,
+            watchLater: watchLater,
+          );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('URL이 저장되었습니다.')),
@@ -692,146 +733,398 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     }
   }
 
-  Widget _buildUrlCard(BuildContext context, UrlItem item) {
-    return Material(
+  Future<void> _showAddFolderDialog(BuildContext context) async {
+    final controller = TextEditingController();
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('폴더 추가'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: '폴더 이름',
+            hintText: '예: 시험 공부',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('추가')),
+        ],
+      ),
+    );
+    if (saved != true) return;
+    try {
+      await ref.read(urlFolderListProvider.notifier).addFolder(controller.text);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('폴더가 추가되었습니다.')),
+        );
+      }
+    } on UrlFolderDuplicateNameException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('이미 같은 이름의 폴더가 있습니다.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showManageFoldersDialog(
+    BuildContext context,
+    List<UrlFolder> folders,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('폴더 관리'),
+        content: SizedBox(
+          width: 400,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: folders.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (_, i) {
+              final folder = folders[i];
+              final isDefault = folder.name == UrlFolder.defaultFolderName;
+              return ListTile(
+                leading: const Icon(Icons.folder_outlined),
+                title: Text(folder.name),
+                trailing: isDefault
+                    ? null
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 20),
+                            onPressed: () async {
+                              Navigator.pop(ctx);
+                              await _showRenameFolderDialog(context, folder);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            onPressed: () async {
+                              Navigator.pop(ctx);
+                              await _deleteFolder(context, folder);
+                            },
+                          ),
+                        ],
+                      ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('닫기')),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showRenameFolderDialog(
+    BuildContext context,
+    UrlFolder folder,
+  ) async {
+    final controller = TextEditingController(text: folder.name);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('폴더 이름 변경'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('저장')),
+        ],
+      ),
+    );
+    if (saved != true) return;
+    try {
+      await ref
+          .read(urlFolderListProvider.notifier)
+          .renameFolder(folder.id, controller.text);
+    } on UrlFolderDuplicateNameException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('이미 같은 이름의 폴더가 있습니다.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteFolder(BuildContext context, UrlFolder folder) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('폴더 삭제'),
+        content: Text(
+          '"${folder.name}" 폴더를 삭제할까요?\n포함된 URL은 "${UrlFolder.defaultFolderName}" 폴더로 이동합니다.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('삭제')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await ref
+        .read(urlListProvider.notifier)
+        .reassignUrlsFromDeletedFolder(folder.id);
+    if (_selectedFolderId == folder.id) {
+      setState(() => _selectedFolderId = null);
+    }
+    try {
+      await ref.read(urlFolderListProvider.notifier).deleteFolder(folder.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('폴더가 삭제되었습니다.')),
+        );
+      }
+    } on UrlFolderProtectedException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('기본 폴더는 삭제할 수 없습니다.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showMoveFolderDialog(
+    BuildContext context,
+    UrlItem item,
+    List<UrlFolder> folders,
+  ) async {
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('폴더 이동'),
+        children: folders
+            .map(
+              (f) => SimpleDialogOption(
+                onPressed: () => Navigator.pop(ctx, f.id),
+                child: Row(
+                  children: [
+                    const Icon(Icons.folder_outlined, size: 20),
+                    const SizedBox(width: 8),
+                    Text(f.name),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+    if (selected == null || selected == item.folderId) return;
+    await ref.read(urlListProvider.notifier).moveToFolder(item.id, selected);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('폴더가 변경되었습니다.')),
+      );
+    }
+  }
+
+  Future<void> _showMemoDialog(UrlItem item) async {
+    final controller = TextEditingController(text: item.memo);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('메모'),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            hintText: '메모를 입력하세요 (비우면 삭제)',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('저장'),
+          ),
+        ],
+      ),
+    );
+    if (saved != true) return;
+    await ref.read(urlListProvider.notifier).updateMemo(item.id, controller.text);
+  }
+
+  Widget _buildUrlCard(
+    BuildContext context,
+    UrlItem item,
+    List<UrlFolder> folders,
+  ) {
+    final card = Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         onTap: () => _openUrl(item),
         onSecondaryTapDown: (details) {
-          _showCardMenu(context, details.globalPosition, item);
+          _showCardMenu(context, details.globalPosition, item, folders);
         },
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.grey.shade200),
           ),
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(8),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(
+                      item.icon,
+                      color: const Color(0xFF6366F1),
+                      size: 16,
+                    ),
                   ),
-                  child: Icon(
-                    item.icon,
-                    color: const Color(0xFF6366F1),
-                    size: 20,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      item.title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        height: 1.25,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (item.watchLater)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF7ED),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          '나중에 보기',
-                          style: TextStyle(
-                            color: Color(0xFFF97316),
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  if (item.watchLater)
+                    Container(
+                      margin: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF7ED),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        '나중에',
+                        style: TextStyle(
+                          color: Color(0xFFF97316),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, color: Colors.grey[500]),
-                      onSelected: (value) => _handleCardAction(value, item),
-                      itemBuilder: (_) => [
-                        const PopupMenuItem(
-                          value: 'open',
-                          child: Text('브라우저에서 열기'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'copy',
-                          child: Text('URL 복사'),
-                        ),
-                        PopupMenuItem(
-                          value: 'watch',
-                          child: Text(
-                            item.watchLater
-                                ? '나중에 보기 해제'
-                                : '나중에 보기',
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('삭제'),
-                        ),
-                      ],
                     ),
-                  ],
-                ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              item.title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                height: 1.3,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildBadge(
-                  item.category,
-                  const Color(0xFFEEF2FF),
-                  const Color(0xFF6366F1),
-                ),
-                if (item.source == 'extension') ...[
-                  const SizedBox(width: 6),
-                  _buildBadge(
-                    '확장',
-                    Colors.green.shade50,
-                    Colors.green.shade700,
+                  PopupMenuButton<String>(
+                    padding: EdgeInsets.zero,
+                    iconSize: 18,
+                    icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[500]),
+                    onSelected: (value) =>
+                        _handleCardAction(value, item, folders),
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
+                        value: 'open',
+                        child: Text('브라우저에서 열기'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'move',
+                        child: Text('폴더 이동'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'memo',
+                        child: Text('메모'),
+                      ),
+                      const PopupMenuItem(
+                        value: 'copy',
+                        child: Text('URL 복사'),
+                      ),
+                      PopupMenuItem(
+                        value: 'watch',
+                        child: Text(
+                          item.watchLater ? '나중에 보기 해제' : '나중에 보기',
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('삭제'),
+                      ),
+                    ],
                   ),
                 ],
+              ),
+              if (item.memo.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  item.memo,
+                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
-            ),
-            if (item.tags.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: item.tags
-                    .map(
-                      (tag) => _buildBadge(
-                        tag,
-                        Colors.grey.shade100,
-                        Colors.grey.shade600,
-                      ),
-                    )
-                    .toList(),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  _buildBadge(
+                    _folderName(folders, item.folderId),
+                    const Color(0xFFEEF2FF),
+                    const Color(0xFF6366F1),
+                  ),
+                  if (item.source == 'extension') ...[
+                    const SizedBox(width: 4),
+                    _buildBadge(
+                      '확장',
+                      Colors.green.shade50,
+                      Colors.green.shade700,
+                    ),
+                  ],
+                  const Spacer(),
+                  Text(
+                    item.savedDateLabel,
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                  ),
+                ],
               ),
             ],
-            const Spacer(),
-            Text(
-              '저장일: ${item.savedDateLabel}',
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-            ),
-          ],
+          ),
         ),
       ),
+    );
+
+    return LongPressDraggable<String>(
+      data: item.id,
+      feedback: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 240,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFF6D28D9)),
+          ),
+          child: Text(
+            item.title,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ),
+      childWhenDragging: Opacity(opacity: 0.35, child: card),
+      child: card,
     );
   }
 
@@ -850,6 +1143,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     BuildContext context,
     Offset position,
     UrlItem item,
+    List<UrlFolder> folders,
   ) {
     showMenu<String>(
       context: context,
@@ -861,6 +1155,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       ),
       items: [
         const PopupMenuItem(value: 'open', child: Text('브라우저에서 열기')),
+        const PopupMenuItem(value: 'move', child: Text('폴더 이동')),
+        const PopupMenuItem(value: 'move', child: Text('폴더 이동')),
+        const PopupMenuItem(value: 'memo', child: Text('메모')),
         const PopupMenuItem(value: 'copy', child: Text('URL 복사')),
         PopupMenuItem(
           value: 'watch',
@@ -869,14 +1166,22 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
         const PopupMenuItem(value: 'delete', child: Text('삭제')),
       ],
     ).then((value) {
-      if (value != null) _handleCardAction(value, item);
+      if (value != null) _handleCardAction(value, item, folders);
     });
   }
 
-  Future<void> _handleCardAction(String action, UrlItem item) async {
+  Future<void> _handleCardAction(
+    String action,
+    UrlItem item,
+    List<UrlFolder> folders,
+  ) async {
     switch (action) {
       case 'open':
         await _openUrl(item);
+      case 'move':
+        await _showMoveFolderDialog(context, item, folders);
+      case 'memo':
+        await _showMemoDialog(item);
       case 'copy':
         await Clipboard.setData(ClipboardData(text: item.url));
         if (!mounted) return;
@@ -896,7 +1201,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
 
   Widget _buildBadge(String text, Color bgColor, Color textColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(4),
@@ -905,7 +1210,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
         text,
         style: TextStyle(
           color: textColor,
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.bold,
         ),
       ),

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DontDelay URL Saver",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "현재 페이지를 DontDelay URL 보관함에 저장합니다.",
   "permissions": ["activeTab", "contextMenus", "storage", "notifications"],
   "host_permissions": ["http://127.0.0.1:*/*"],

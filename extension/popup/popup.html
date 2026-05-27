@@ -31,13 +31,32 @@
         margin-bottom: 4px;
         font-size: 12px;
       }
-      input {
+      input[type='text'],
+      input[type='password'],
+      input[type='number'] {
         width: 100%;
         padding: 8px 10px;
         border: 1px solid #d1d5db;
         border-radius: 6px;
         margin-bottom: 12px;
         font-size: 12px;
+      }
+      textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        font-size: 12px;
+        resize: vertical;
+      }
+      label.check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        font-size: 12px;
+        cursor: pointer;
       }
       .row {
         display: flex;
@@ -98,6 +117,12 @@
     <label for="token">토큰</label>
     <input id="token" type="password" placeholder="Bearer 토큰" />
 
+    <label class="check">
+      <input type="checkbox" id="useMemo" />
+      메모 추가
+    </label>
+    <textarea id="memo" placeholder="메모 (선택)" style="display:none; min-height:64px;"></textarea>
+
     <div class="row">
       <button id="testBtn" type="button">연결 테스트</button>
       <button id="saveBtn" type="button">현재 탭 저장</button>
@@ -106,6 +131,7 @@
     <div id="status"></div>
     <div id="lastSaved"></div>
 
+    <script src="../save_api.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

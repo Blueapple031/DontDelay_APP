@@ -29,13 +29,7 @@ void main() async {
   final connectionService = UrlConnectionService();
   final apiServer = UrlApiServer(
     connectionService: connectionService,
-    onAddUrl: ({required url, required title, required source}) {
-      return container.read(urlListProvider.notifier).addFromApi(
-            url: url,
-            title: title,
-            source: source,
-          );
-    },
+    resolveOnAddUrl: () => createUrlApiAddHandler(container),
   );
 
   await apiServer.start();
