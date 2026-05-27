@@ -1,14 +1,23 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'todo_eisenhower_board.dart';
 import 'todo_model.dart';
 import 'todo_provider.dart';
+import 'todo_view_mode.dart';
 
-class TodoScreen extends ConsumerWidget {
+class TodoScreen extends ConsumerStatefulWidget {
   const TodoScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodoScreen> createState() => _TodoScreenState();
+}
+
+class _TodoScreenState extends ConsumerState<TodoScreen> {
+  TodoViewMode _viewMode = TodoViewMode.kanban;
+
+  @override
+  Widget build(BuildContext context) {
     final asyncTodos = ref.watch(todoListProvider);
 
     return Padding(
@@ -36,6 +45,25 @@ class TodoScreen extends ConsumerWidget {
               ),
               Row(
                 children: [
+                  SegmentedButton<TodoViewMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: TodoViewMode.kanban,
+                        label: Text('칸반'),
+                        icon: Icon(Icons.view_column_outlined, size: 18),
+                      ),
+                      ButtonSegment(
+                        value: TodoViewMode.eisenhower,
+                        label: Text('아이젼하워'),
+                        icon: Icon(Icons.grid_4x4_outlined, size: 18),
+                      ),
+                    ],
+                    selected: {_viewMode},
+                    onSelectionChanged: (s) {
+                      setState(() => _viewMode = s.first);
+                    },
+                  ),
+                  const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: () {},
                     icon: const Icon(
@@ -92,6 +120,9 @@ class TodoScreen extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
               data: (todos) {
+                if (_viewMode == TodoViewMode.eisenhower) {
+                  return TodoEisenhowerBoard(todos: todos);
+                }
                 final todoItems =
                     todos.where((t) => t.status == TodoStatus.todo).toList();
                 final inProgressItems = todos
@@ -280,14 +311,26 @@ class TodoScreen extends ConsumerWidget {
             style: TextStyle(fontSize: 13, color: Colors.grey[500]),
           ),
           const SizedBox(height: 16),
-          Row(
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
+              _buildBadge(
+                '긴 ${item.urgency}',
+                Colors.indigo.shade50,
+                Colors.indigo.shade800,
+              ),
+              _buildBadge(
+                '중 ${item.importance}',
+                Colors.teal.shade50,
+                Colors.teal.shade800,
+              ),
               _buildBadge(
                 item.priorityLabel,
                 priorityColor.withOpacity(0.1),
                 priorityColor,
               ),
-              const SizedBox(width: 8),
               _buildBadge(
                 item.tag,
                 const Color(0xFFEEF2FF),

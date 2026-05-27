@@ -16,10 +16,12 @@ DontDelay/
 │   ├── features/                 # 기능별 화면 모음
 │   │   ├── dashboard.dart        # 대시보드 화면
 │   │   ├── todo/                 # 할 일 관리 기능
-│   │   │   ├── todo.dart         # 칸반 보드 UI
-│   │   │   ├── todo_model.dart   # 모델 및 JSON 직렬화
-│   │   │   ├── todo_service.dart # 문서 폴더 JSON 저장소
-│   │   │   └── todo_provider.dart # Riverpod 상태
+│   │   │   ├── todo.dart              # 칸반 + 아이젼하워 토글·UI
+│   │   │   ├── todo_view_mode.dart    # 칸반 / 아이젼하워 보기 enum
+│   │   │   ├── todo_eisenhower_board.dart # 긴급·중요 0~10 플롯
+│   │   │   ├── todo_model.dart        # 모델 및 JSON 직렬화
+│   │   │   ├── todo_service.dart      # 문서 폴더 JSON 저장소
+│   │   │   └── todo_provider.dart     # Riverpod 상태
 │   │   ├── calender.dart         # 캘린더 화면
 │   │   ├── keepurl.dart          # URL 보관함 화면
 │   │   ├── diary.dart            # 일기 화면
@@ -152,16 +154,18 @@ DontDelay/
 
 > 현재 모든 데이터는 하드코딩된 더미 데이터입니다.
 
-### 2. `todo/` — 할 일 관리 (칸반 보드)
+### 2. `todo/` — 할 일 관리 (칸반 + 아이젼하워)
 
 파일:
 
-- `todo.dart`: UI·드래그 앤 드롭·추가 다이얼로그
-- `todo_model.dart`: `TodoItem` 모델, JSON 변환 (`toJson` / `fromJson`)
+- `todo.dart`: 보기 전환(`SegmentedButton`)·칸반·추가 다이얼로그
+- `todo_view_mode.dart`: `TodoViewMode` (칸반 / 아이젼하워)
+- `todo_eisenhower_board.dart`: 긴급도·중요도 각 0~10인 2차원 플롯, 카드 길게 눌러 드래그 후 드롭 시 수치 저장
+- `todo_model.dart`: `TodoItem` (`urgency`, `importance`, `priority`, `status` 등), JSON
 - `todo_service.dart`: `getApplicationDocumentsDirectory()` 아래 `DontDelay/todos.json`으로 저장·불러오기
-- `todo_provider.dart`: Riverpod `AsyncNotifier`로 상태와 디스크 동기화
+- `todo_provider.dart`: Riverpod `AsyncNotifier`, `updateUrgencyImportance` 포함
 
-3개 컬럼의 칸반(Kanban) 보드:
+**칸반**: 3개 컬럼의 Kanban 보드 (`status`).
 
 | 컬럼 | 설명 |
 |------|------|
@@ -169,13 +173,16 @@ DontDelay/
 | 진행 중 | 현재 작업 중인 태스크 |
 | 완료 | 끝난 태스크 |
 
-- 각 카드에 제목, 날짜, 우선순위(높음/보통/낮음), 태그 표시
-- 드래그로 컬럼 이동 → 즉시 JSON에 저장
+**아이젼하워 플롯**: 가로=긴급도·세로=중요도 (0~10). 완료(`done`) 항목은 매트릭스에 표시하지 않음. 새 항목의 초기값은 `priority`(높음/보통/낮음)에 따라 (8,8)/(5,5)/(3,3); JSON에 `urgency`·`importance` 키가 없으면 동일 규칙으로 보정.
+
+- 칸반: 카드에 `긴/중`(긴급·중요) 뱃지·우선순위·태그 표시, 드래그로 컬럼 이동 → 즉시 JSON 저장
 - 우클릭 메뉴: 다른 컬럼으로 이동 / 삭제
-- 점선 테두리의 "카드 추가" 버튼 (커스텀 `CustomPaintDecoration`)
-- AI 자동 분류 버튼 (기능 미구현)
+- 점선 "카드 추가" (`CustomPaintDecoration`)
+- AI 자동 분류 버튼 (미구현)
 
 **저장 위치 (Windows 예)**: `%USERPROFILE%\Documents\DontDelay\todos.json`
+
+설계 참고: [`docs/PLAN_EISENHOWER_MATRIX.md`](PLAN_EISENHOWER_MATRIX.md)
 
 ### 3. `calender.dart` — 캘린더
 

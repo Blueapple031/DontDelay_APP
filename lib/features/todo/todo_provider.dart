@@ -71,4 +71,28 @@ class TodoListNotifier extends AsyncNotifier<List<TodoItem>> {
       Error.throwWithStackTrace(e, st);
     }
   }
+
+  Future<void> updateUrgencyImportance(
+    String id,
+    int urgency,
+    int importance,
+  ) async {
+    final u = urgency.clamp(1, 8).toInt();
+    final im = importance.clamp(1, 8).toInt();
+    final previous = List<TodoItem>.from(_currentList());
+    final updated = previous
+        .map(
+          (t) => t.id == id
+              ? t.copyWith(urgency: u, importance: im)
+              : t,
+        )
+        .toList();
+    state = AsyncData<List<TodoItem>>(updated);
+    try {
+      await _service.saveTodos(updated);
+    } catch (e, st) {
+      state = AsyncData<List<TodoItem>>(previous);
+      Error.throwWithStackTrace(e, st);
+    }
+  }
 }
