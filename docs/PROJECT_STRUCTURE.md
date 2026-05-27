@@ -192,7 +192,7 @@ DontDelay/
 - **우측**: 다가오는 일정 리스트
 - 이벤트 타입: 시험(빨강), 마감(주황), 일정(파랑)
 
-### 4. `keepurl.dart` — URL 보관함
+### 4. `keepurl/` — URL 보관함
 
 학습 자료 URL을 카테고리별로 보관하는 화면.
 
@@ -200,6 +200,9 @@ DontDelay/
 - 카테고리 칩: 전체, 개발, 전공, 학습법, 자기계발
 - AI 자동 분류 배너
 - 2열 그리드 카드 레이아웃
+- (계획) 브라우저 확장 + 로컬 API 연동 — [`docs/PLAN_BROWSER_EXTENSION.md`](PLAN_BROWSER_EXTENSION.md)
+
+> 현재 UI만 존재하며 더미 데이터입니다. 구현 계획은 위 문서 참고.
 
 ### 5. `diary.dart` — 일기
 
