@@ -8,6 +8,7 @@ import '../features/calender.dart';
 import '../features/keepurl/keepurl.dart';
 import '../features/diary.dart';
 import '../features/exammode.dart';
+import '../features/exam_generator/exam_generator.dart';
 import '../features/aicoach.dart';
 import '../features/mypage.dart';
 
@@ -54,6 +55,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/exam_mode',
           builder: (context, state) => const ExamModeScreen(),
+        ),
+        GoRoute(
+          path: '/exam_generator',
+          builder: (context, state) => const ExamGeneratorScreen(),
         ),
         GoRoute(
           path: '/ai_coach',

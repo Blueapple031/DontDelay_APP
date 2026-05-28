@@ -48,6 +48,7 @@ dependencies:
   cookie_jar: ^4.0.9
   shelf: ^1.4.2
   shelf_router: ^1.1.4
+  file_picker: ^10.1.9
 
 dev_dependencies:
   flutter_test:

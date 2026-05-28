@@ -19,6 +19,11 @@ class MainLayout extends StatelessWidget {
     {'title': 'URL 보관함', 'icon': Icons.bookmark_border, 'path': '/keepurl'},
     {'title': '일기', 'icon': Icons.book_outlined, 'path': '/diary'},
     {'title': '시험기간 모드', 'icon': Icons.school_outlined, 'path': '/exam_mode'},
+    {
+      'title': '시험 문제 생성',
+      'icon': Icons.quiz_outlined,
+      'path': '/exam_generator',
+    },
     {'title': 'AI 코치', 'icon': Icons.smart_toy_outlined, 'path': '/ai_coach'},
     {'title': '마이페이지', 'icon': Icons.person_outline, 'path': '/mypage'},
   ];
@@ -90,6 +95,7 @@ class MainLayout extends StatelessWidget {
                                 item['path'] == '/diary' ||
                                 item['path'] == '/mypage' ||
                                 item['path'] == '/exam_mode' ||
+                                item['path'] == '/exam_generator' ||
                                 item['path'] == '/ai_coach') {
                               context.go(item['path']);
                             } else {
