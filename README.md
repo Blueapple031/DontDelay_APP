@@ -2,13 +2,96 @@
 
 학습플러스코칭동아리_팀 안미룬이 입니다.
 
-## Getting Started
+Flutter로 만든 **데스크탑 학습 코치** 앱입니다. (Windows · macOS)
 
-A Flutter desktop application.
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 사전 준비
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. **[Flutter SDK](https://docs.flutter.dev/get-started/install)** 설치  
+   - 설치 후 터미널에서 `flutter doctor` 로 환경 점검
+2. **데스크탑 지원 켜기**
+   ```bash
+   flutter config --enable-windows-desktop
+   flutter config --enable-macos-desktop
+   ```
+3. **macOS에서 빌드·실행**하려면 **Xcode**(App Store)와 Xcode Command Line Tools 필요
+
+---
+
+## 프로젝트 받기
+
+Git으로 클론하거나 ZIP으로 내려받은 뒤, 프로젝트 루트(`DontDelay`)로 이동합니다.
+
+```bash
+cd DontDelay
+flutter pub get
+```
+
+---
+
+## Windows에서 실행
+
+### 한 번만: 개발자 모드 (권장)
+
+플러그인 빌드에 **심볼릭 링크**가 필요합니다. 개발자 모드를 켜지 않으면 실행 시 안내가 뜰 수 있습니다.
+
+1. `Win + I` → **시스템** → **개발자용** → **개발자 모드** 켜기  
+2. 또는 실행:
+   ```powershell
+   start ms-settings:developers
+   ```
+
+### 개발 모드로 앱 실행
+
+```powershell
+flutter run -d windows
+```
+
+### 릴리스 빌드(배포용 실행 파일)
+
+```powershell
+flutter build windows
+```
+
+생성 위치: `build\windows\x64\runner\Release\`  
+여기 있는 `dontdelay.exe`를 다른 PC로 복사해 실행할 수 있습니다(해당 PC에 **Visual C++ 재배포 패키지** 등이 필요할 수 있음).
+
+---
+
+## macOS에서 실행
+
+### 개발 모드로 앱 실행
+
+```bash
+flutter run -d macos
+```
+
+### 릴리스 빌드
+
+```bash
+flutter build macos
+```
+
+생성 위치: `build/macos/Build/Products/Release/`  
+앱 번들(`.app`)을 더블 클릭해 실행하거나, 다른 Mac에 복사해 사용할 수 있습니다.  
+처음 실행 시 **보안·개인 정보 보호**에서 개발자를 허용해야 할 수 있습니다.
+
+---
+
+## 자주 쓰는 명령
+
+| 목적 | 명령 |
+|------|------|
+| 연결된 기기·에뮬레이터 확인 | `flutter devices` |
+| 분석 | `flutter analyze` |
+| 테스트 | `flutter test` |
+
+---
+
+## 참고
+
+- [Flutter 데스크탑 지원](https://docs.flutter.dev/platform-integration/desktop)
+- [첫 Flutter 앱 튜토리얼](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook](https://docs.flutter.dev/cookbook)
+- 프로젝트 폴더 구조: [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)
