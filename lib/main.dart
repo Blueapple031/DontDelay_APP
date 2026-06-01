@@ -70,3 +70,5 @@ class MyApp extends ConsumerWidget {
     );
   }
 }
+
+// github issue 파기 실습입니다
