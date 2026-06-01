@@ -22,26 +22,26 @@ Page<void> _pageTransition({
     name: state.name,
     arguments: state.extra,
     restorationId: state.pageKey.value,
-    transitionDuration: const Duration(milliseconds: 240),
-    reverseTransitionDuration: const Duration(milliseconds: 180),
+    transitionDuration: const Duration(milliseconds: 400),
+    reverseTransitionDuration: const Duration(milliseconds: 320),
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       final curvedAnimation = CurvedAnimation(
         parent: animation,
-        curve: Curves.easeOutQuart,
-        reverseCurve: Curves.easeInCubic,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInOutCubic,
       );
 
       return ColoredBox(
         color: Theme.of(context).colorScheme.surface,
         child: SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0.04, 0),
+            begin: const Offset(0.025, 0),
             end: Offset.zero,
           ).animate(curvedAnimation),
           child: FadeTransition(
             opacity: Tween<double>(
-              begin: 0.88,
+              begin: 0.94,
               end: 1,
             ).animate(curvedAnimation),
             child: child,

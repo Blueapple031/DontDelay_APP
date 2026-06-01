@@ -68,7 +68,3 @@ class MyApp extends ConsumerWidget {
       theme: AppThemes.getTheme(themeType),
       routerConfig: appRouter,
     );
-  }
-}
-
-// github issue 파기 실습입니다
