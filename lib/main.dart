@@ -68,4 +68,3 @@ class MyApp extends ConsumerWidget {
       theme: AppThemes.getTheme(themeType),
       routerConfig: appRouter,
     );
-  }
