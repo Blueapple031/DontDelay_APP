@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../features/auth/login.dart';
 import '../features/auth/signup.dart';
 import '../layout/main_layout.dart';
@@ -11,19 +13,59 @@ import '../features/exammode.dart';
 import '../features/aicoach.dart';
 import '../features/mypage.dart';
 
+Page<void> _pageTransition({
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    name: state.name,
+    arguments: state.extra,
+    restorationId: state.pageKey.value,
+    transitionDuration: const Duration(milliseconds: 240),
+    reverseTransitionDuration: const Duration(milliseconds: 180),
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutQuart,
+        reverseCurve: Curves.easeInCubic,
+      );
+
+      return ColoredBox(
+        color: Theme.of(context).colorScheme.surface,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.04, 0),
+            end: Offset.zero,
+          ).animate(curvedAnimation),
+          child: FadeTransition(
+            opacity: Tween<double>(
+              begin: 0.88,
+              end: 1,
+            ).animate(curvedAnimation),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
+}
 
 // GoRouter 설정
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login', // 앱 시작 시 가장 먼저 로그인 화면으로 이동
+  initialLocation: '/dashboard', // 앱 시작 시 가장 먼저 로그인 화면으로 이동
   routes: [
     // 1. 로그인 화면 (ShellRoute 바깥이므로 사이드바 없음)
     GoRoute(
       path: '/login',
-      builder: (context, state) => const LoginScreen(),
+      pageBuilder: (context, state) =>
+          _pageTransition(state: state, child: const LoginScreen()),
     ),
     GoRoute(
       path: '/signup',
-      builder: (context, state) => const SignUpScreen(),
+      pageBuilder: (context, state) =>
+          _pageTransition(state: state, child: const SignUpScreen()),
     ),
     ShellRoute(
       builder: (context, state, child) {
@@ -36,32 +78,43 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/dashboard',
-          builder: (context, state) => const DashboardScreen(),
+          pageBuilder: (context, state) =>
+              _pageTransition(state: state, child: const DashboardScreen()),
         ),
-        GoRoute(path: '/todo', builder: (context, state) => const TodoScreen()),
+        GoRoute(
+          path: '/todo',
+          pageBuilder: (context, state) =>
+              _pageTransition(state: state, child: const TodoScreen()),
+        ),
         GoRoute(
           path: '/calendar',
-          builder: (context, state) => const CalendarScreen(),
+          pageBuilder: (context, state) =>
+              _pageTransition(state: state, child: const CalendarScreen()),
         ),
         GoRoute(
           path: '/keepurl',
-          builder: (context, state) => const UrlScreen(),
+          pageBuilder: (context, state) =>
+              _pageTransition(state: state, child: const UrlScreen()),
         ),
         GoRoute(
           path: '/diary',
-          builder: (context, state) => const DiaryScreen(),
+          pageBuilder: (context, state) =>
+              _pageTransition(state: state, child: const DiaryScreen()),
         ),
         GoRoute(
           path: '/exam_mode',
-          builder: (context, state) => const ExamModeScreen(),
+          pageBuilder: (context, state) =>
+              _pageTransition(state: state, child: const ExamModeScreen()),
         ),
         GoRoute(
           path: '/ai_coach',
-          builder: (context, state) => const AiCoachScreen(),
+          pageBuilder: (context, state) =>
+              _pageTransition(state: state, child: const AiCoachScreen()),
         ),
         GoRoute(
           path: '/mypage',
-          builder: (context, state) => const MyPageScreen(),
+          pageBuilder: (context, state) =>
+              _pageTransition(state: state, child: const MyPageScreen()),
         ),
       ],
     ),
