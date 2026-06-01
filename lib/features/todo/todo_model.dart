@@ -18,6 +18,8 @@ class TodoItem {
   /// 중요도 1(낮음) ~ 8(높음), 세로축.
   final int importance;
   final DateTime createdAt;
+  /// done 전환 직전 status. done → 다른 상태로 되돌릴 때 복원에 사용.
+  final TodoStatus? previousStatus;
 
   TodoItem({
     String? id,
@@ -29,6 +31,7 @@ class TodoItem {
     DateTime? createdAt,
     int? urgency,
     int? importance,
+    this.previousStatus,
   })  : id = id ?? _uuid.v4(),
         urgency = urgency != null
             ? urgency.clamp(1, 8).toInt()
@@ -63,6 +66,8 @@ class TodoItem {
     TodoStatus? status,
     int? urgency,
     int? importance,
+    TodoStatus? previousStatus,
+    bool clearPreviousStatus = false,
   }) {
     return TodoItem(
       id: id,
@@ -74,6 +79,9 @@ class TodoItem {
       urgency: urgency ?? this.urgency,
       importance: importance ?? this.importance,
       createdAt: createdAt,
+      previousStatus: clearPreviousStatus
+          ? null
+          : (previousStatus ?? this.previousStatus),
     );
   }
 
@@ -88,6 +96,7 @@ class TodoItem {
       'urgency': urgency,
       'importance': importance,
       'createdAt': createdAt.toIso8601String(),
+      if (previousStatus != null) 'previousStatus': previousStatus!.name,
     };
   }
 
@@ -101,6 +110,7 @@ class TodoItem {
     final im = json.containsKey('importance')
         ? _readIntField(json['importance'], d.$2)
         : d.$2;
+    final prevStatusRaw = json['previousStatus'];
     return TodoItem(
       id: json['id'] as String,
       title: json['title'] as String,
@@ -113,6 +123,9 @@ class TodoItem {
       createdAt: rawCreated != null && rawCreated is String
           ? DateTime.parse(rawCreated)
           : DateTime.now(),
+      previousStatus: prevStatusRaw != null
+          ? TodoStatus.values.byName(prevStatusRaw as String)
+          : null,
     );
   }
 

@@ -60,8 +60,30 @@ class TodoListNotifier extends AsyncNotifier<List<TodoItem>> {
 
   Future<void> changeStatus(String id, TodoStatus newStatus) async {
     final previous = List<TodoItem>.from(_currentList());
+    final updated = previous.map((t) {
+      if (t.id != id) return t;
+      if (newStatus == TodoStatus.done) {
+        return t.copyWith(status: newStatus, previousStatus: t.status);
+      }
+      if (t.status == TodoStatus.done && t.previousStatus != null) {
+        return t.copyWith(
+            status: t.previousStatus!, clearPreviousStatus: true);
+      }
+      return t.copyWith(status: newStatus);
+    }).toList();
+    state = AsyncData<List<TodoItem>>(updated);
+    try {
+      await _service.saveTodos(updated);
+    } catch (e, st) {
+      state = AsyncData<List<TodoItem>>(previous);
+      Error.throwWithStackTrace(e, st);
+    }
+  }
+
+  Future<void> replaceTagId(String fromId, String toId) async {
+    final previous = List<TodoItem>.from(_currentList());
     final updated = previous
-        .map((t) => t.id == id ? t.copyWith(status: newStatus) : t)
+        .map((t) => t.tag == fromId ? t.copyWith(tag: toId) : t)
         .toList();
     state = AsyncData<List<TodoItem>>(updated);
     try {

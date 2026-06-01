@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core/router.dart';
+import 'core/theme/app_themes.dart';
+import 'core/theme/theme_provider.dart';
 import 'features/keepurl/url_api_server.dart';
 import 'features/keepurl/url_connection_service.dart';
 import 'features/keepurl/url_provider.dart';
@@ -50,19 +52,20 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // AsyncNotifier: 로드 전에는 기본 테마(무채색)로 fallback
+    final themeType = ref.watch(themeProvider).maybeWhen(
+          data: (t) => t,
+          orElse: () => AppThemeType.grayscale,
+        );
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'AI Study Coach',
-      theme: ThemeData(
-        fontFamily: 'Pretendard',
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
-        useMaterial3: true,
-      ),
+      title: 'DontDelay',
+      theme: AppThemes.getTheme(themeType),
       routerConfig: appRouter,
     );
   }

@@ -36,7 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // 로그인 성공 시 대시보드로 이동
       context.go('/dashboard');
     } else if (mounted) {
-      // 401 Unauthorized 등 로그인 실패 시
+      //401 Unauthorized 등 로그인 실패 시
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('아이디 또는 비밀번호가 올바르지 않습니다.')),
       );
