@@ -69,4 +69,8 @@ class MyApp extends ConsumerWidget {
       routerConfig: appRouter,
     );
   }
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes
