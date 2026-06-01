@@ -36,20 +36,17 @@ void main() async {
 
   await apiServer.start();
   final config = await connectionService.loadOrCreate();
-  container.read(urlApiServerStateProvider.notifier).updateServerState(
-    UrlApiServerState(
-      isRunning: apiServer.isRunning,
-      startError: apiServer.startError,
-      config: config,
-    ),
-  );
+  container
+      .read(urlApiServerStateProvider.notifier)
+      .updateServerState(
+        UrlApiServerState(
+          isRunning: apiServer.isRunning,
+          startError: apiServer.startError,
+          config: config,
+        ),
+      );
 
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const MyApp(),
-    ),
-  );
+  runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -58,13 +55,14 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // AsyncNotifier: 로드 전에는 기본 테마(무채색)로 fallback
-    final themeType = ref.watch(themeProvider).maybeWhen(
-          data: (t) => t,
-          orElse: () => AppThemeType.grayscale,
-        );
+    final themeType = ref
+        .watch(themeProvider)
+        .maybeWhen(data: (t) => t, orElse: () => AppThemeType.grayscale);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'DontDelay',
       theme: AppThemes.getTheme(themeType),
       routerConfig: appRouter,
     );
+  }
+}
