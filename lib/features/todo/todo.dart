@@ -68,17 +68,17 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: () {},
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.auto_awesome,
-                      color: Color(0xFF6D28D9),
+                      color: Theme.of(context).colorScheme.primary,
                       size: 18,
                     ),
-                    label: const Text(
+                    label: Text(
                       'AI 자동 분류',
-                      style: TextStyle(color: Color(0xFF6D28D9)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF6D28D9)),
+                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -100,7 +100,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4F46E5),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -204,12 +204,12 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
           return Container(
             decoration: BoxDecoration(
               color: isHovering
-                  ? const Color(0xFFF3E8FF).withValues(alpha: 0.5)
+                  ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
               border: isHovering
                   ? Border.all(
-                      color: const Color(0xFF6D28D9)
+                      color: Theme.of(context).colorScheme.primary
                           .withValues(alpha: 0.3),
                       width: 2,
                     )

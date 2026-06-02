@@ -21,8 +21,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _focusedDate;
   late final DateTime _today;
 
-  static const _kPurple = Color(0xFF6D28D9);
-  static const _kPurpleLight = Color(0xFFF3E8FF);
+  Color get _kPurple => Theme.of(context).colorScheme.primary;
+  Color get _kPurpleLight => Theme.of(context).colorScheme.primaryContainer;
 
   @override
   void initState() {
@@ -320,7 +320,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   right: BorderSide(color: Colors.grey.shade200),
                   bottom: BorderSide(color: Colors.grey.shade200),
                   left: isHovering
-                      ? const BorderSide(
+                      ? BorderSide(
                           color: _kPurple, width: 2)
                       : BorderSide.none,
                 ),
@@ -335,7 +335,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         ? Container(
                             width: 24,
                             height: 24,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: _kPurple,
                               shape: BoxShape.circle,
                             ),
@@ -569,7 +569,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             label: const Text('추가',
                 style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               elevation: 0,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),

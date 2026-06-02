@@ -8,7 +8,7 @@ import '../features/dashboard.dart';
 import '../features/todo/todo.dart';
 import '../features/calender.dart';
 import '../features/keepurl/keepurl.dart';
-import '../features/diary.dart';
+import '../features/retrospective.dart';
 import '../features/exammode.dart';
 import '../features/aicoach.dart';
 import '../features/mypage.dart';
@@ -97,9 +97,9 @@ final GoRouter appRouter = GoRouter(
               _pageTransition(state: state, child: const UrlScreen()),
         ),
         GoRoute(
-          path: '/diary',
+          path: '/retrospective',
           pageBuilder: (context, state) =>
-              _pageTransition(state: state, child: const DiaryScreen()),
+              _pageTransition(state: state, child: const RetrospectiveScreen()),
         ),
         GoRoute(
           path: '/exam_mode',

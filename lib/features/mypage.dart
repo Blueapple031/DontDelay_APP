@@ -50,7 +50,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -102,7 +102,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -184,6 +184,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColor = Theme.of(context).colorScheme.primary;
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: Padding(
@@ -234,7 +235,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF4F46E5),
+                                      color: themeColor,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.white,
@@ -296,15 +297,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                         ),
                         child: Column(
                           children: [
-                            _buildSettingMenu(
-                              icon: Icons.category_rounded,
-                              title: '나의 카테고리 관리',
-                              subtitle: '일정 카테고리를 추가, 수정, 삭제합니다.',
-                              onTap: () {
-                                // TODO: 카테고리 관리 페이지로 이동
-                              },
-                            ),
-                            const Divider(height: 1),
+
                             _buildSettingMenu(
                               icon: Icons.lock_outline,
                               title: '비밀번호 변경',
@@ -341,8 +334,9 @@ class _MyPageScreenState extends State<MyPageScreen> {
     required String subtitle,
     required VoidCallback onTap,
     Color titleColor = Colors.black87,
-    Color iconColor = const Color(0xFF4F46E5),
+    Color? iconColor,
   }) {
+    final effectiveIconColor = iconColor ?? Theme.of(context).colorScheme.primary;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -353,10 +347,10 @@ class _MyPageScreenState extends State<MyPageScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: effectiveIconColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor, size: 24),
+              child: Icon(icon, color: effectiveIconColor, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
