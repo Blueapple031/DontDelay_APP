@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/theme/theme_provider.dart';
-
 class MainLayout extends ConsumerWidget {
   final Widget child;
   final String currentPath;
@@ -25,20 +23,9 @@ class MainLayout extends ConsumerWidget {
     {'title': '마이페이지', 'icon': Icons.person_outline, 'path': '/mypage'},
   ];
 
-  // 테마별 색상 표시
-  static const _themeSwatches = {
-    AppThemeType.grayscale: Color(0xFF8E8E8E),
-    AppThemeType.blue: Color(0xFF7A9AB8),
-    AppThemeType.greenTea: Color(0xFF7A9E80),
-  };
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
-    final currentTheme = ref.watch(themeProvider).maybeWhen(
-          data: (t) => t,
-          orElse: () => AppThemeType.grayscale,
-        );
 
     return Scaffold(
       body: Row(
@@ -100,72 +87,6 @@ class MainLayout extends ConsumerWidget {
                         ),
                       );
                     },
-                  ),
-                ),
-
-                // ── 테마 스위처 ──────────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Divider(color: cs.outlineVariant, height: 1),
-                      const SizedBox(height: 14),
-                      Text(
-                        '테마',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: cs.onSurfaceVariant,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: AppThemeType.values.map((type) {
-                          final isActive = type == currentTheme;
-                          final swatchColor = _themeSwatches[type]!;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: Tooltip(
-                              message: type.label,
-                              child: GestureDetector(
-                                onTap: () => ref
-                                    .read(themeProvider.notifier)
-                                    .setTheme(type),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: swatchColor,
-                                    shape: BoxShape.circle,
-                                    border: isActive
-                                        ? Border.all(
-                                            color: cs.onSurface,
-                                            width: 2,
-                                          )
-                                        : Border.all(
-                                            color: Colors.transparent,
-                                            width: 2,
-                                          ),
-                                    boxShadow: isActive
-                                        ? [
-                                            BoxShadow(
-                                              color: swatchColor
-                                                  .withOpacity(0.4),
-                                              blurRadius: 6,
-                                              spreadRadius: 1,
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
                   ),
                 ),
               ],

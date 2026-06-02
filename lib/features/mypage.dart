@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/theme/theme_provider.dart';
 
-class MyPageScreen extends StatefulWidget {
+class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
 
   @override
-  State<MyPageScreen> createState() => _MyPageScreenState();
+  ConsumerState<MyPageScreen> createState() => _MyPageScreenState();
 }
 
-class _MyPageScreenState extends State<MyPageScreen> {
+class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   // 상태 관리를 위한 임시 데이터
   String _nickname = '안미룬이';
 
@@ -16,6 +18,83 @@ class _MyPageScreenState extends State<MyPageScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('프로필 사진 변경 기능은 추후 구현됩니다.')));
+  }
+
+  // 테마 색상 변경 다이얼로그
+  void _showThemeSelectionDialog() {
+    final currentTheme = ref.watch(themeProvider).value ?? AppThemeType.grayscale;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          '테마 색상 변경',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.min,
+            children: AppThemeType.values.map((themeType) {
+              final isSelected = themeType == currentTheme;
+              final Color themeColor = switch (themeType) {
+                AppThemeType.grayscale => Colors.grey.shade600,
+                AppThemeType.blue => Colors.blue,
+                AppThemeType.greenTea => Colors.teal,
+              };
+
+              return GestureDetector(
+                onTap: () {
+                  ref.read(themeProvider.notifier).setTheme(themeType);
+                  Navigator.pop(context);
+                },
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Tooltip(
+                    message: themeType.label,
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: themeColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.black87 : Colors.grey.shade300,
+                          width: isSelected ? 3 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: themeColor.withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 24,
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기', style: TextStyle(color: Colors.grey)),
+          ),
+        ],
+      ),
+    );
   }
 
   // 닉네임 수정 다이얼로그
@@ -299,6 +378,13 @@ class _MyPageScreenState extends State<MyPageScreen> {
                           children: [
 
                             _buildSettingMenu(
+                              icon: Icons.palette_outlined,
+                              title: '테마 색상 설정',
+                              subtitle: '앱의 기본 테마 색상을 변경합니다.',
+                              onTap: _showThemeSelectionDialog,
+                            ),
+                            const Divider(height: 1),
+                            _buildSettingMenu(
                               icon: Icons.lock_outline,
                               title: '비밀번호 변경',
                               subtitle: '주기적인 변경으로 계정을 안전하게 보호하세요.',
@@ -347,7 +433,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: effectiveIconColor.withOpacity(0.1),
+                color: effectiveIconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: effectiveIconColor, size: 24),
