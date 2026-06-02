@@ -6,25 +6,18 @@ import '../features/dashboard.dart';
 import '../features/todo/todo.dart';
 import '../features/calender.dart';
 import '../features/keepurl/keepurl.dart';
-import '../features/diary.dart';
+import '../features/retrospective.dart';
 import '../features/exammode.dart';
 import '../features/aicoach.dart';
 import '../features/mypage.dart';
 
-
 // GoRouter 설정
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login', // 앱 시작 시 가장 먼저 로그인 화면으로 이동
+  initialLocation: '/dashboard', // 앱 시작 시 가장 먼저 로그인 화면으로 이동
   routes: [
     // 1. 로그인 화면 (ShellRoute 바깥이므로 사이드바 없음)
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/signup',
-      builder: (context, state) => const SignUpScreen(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
     ShellRoute(
       builder: (context, state, child) {
         return MainLayout(
@@ -48,8 +41,8 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const UrlScreen(),
         ),
         GoRoute(
-          path: '/diary',
-          builder: (context, state) => const DiaryScreen(),
+          path: '/retrospective',
+          builder: (context, state) => const RetrospectiveScreen(),
         ),
         GoRoute(
           path: '/exam_mode',

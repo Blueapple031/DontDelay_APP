@@ -110,7 +110,7 @@ class _TodoDialogState extends ConsumerState<_TodoDialog> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide:
-                      const BorderSide(color: Color(0xFF6D28D9)),
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
               ),
             ),
@@ -223,7 +223,7 @@ class _TodoDialogState extends ConsumerState<_TodoDialog> {
         ElevatedButton(
           onPressed: _save,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4F46E5),
+            backgroundColor: Theme.of(context).colorScheme.primary,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -403,7 +403,7 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('+ 태그 추가'),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF6D28D9),
+                  foregroundColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ],
@@ -495,7 +495,7 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide:
-                    const BorderSide(color: Color(0xFF6D28D9)),
+                    BorderSide(color: Theme.of(context).colorScheme.primary),
               ),
             ),
           ),
@@ -520,7 +520,7 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
               ElevatedButton(
                 onPressed: () => _saveEdit(tag),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4F46E5),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -557,7 +557,7 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide:
-                    const BorderSide(color: Color(0xFF6D28D9)),
+                    BorderSide(color: Theme.of(context).colorScheme.primary),
               ),
             ),
           ),
@@ -581,7 +581,7 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
               ElevatedButton(
                 onPressed: _addNew,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4F46E5),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
