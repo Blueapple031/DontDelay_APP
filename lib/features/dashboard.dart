@@ -1,61 +1,65 @@
 import 'package:flutter/material.dart';
 
+import 'coming_soon_overlay.dart';
+
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(40.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. 대시보드 헤더 (인사말 & 날짜)
-          const Text(
-            '안녕하세요! 👋',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '2026년 5월 11일 월요일',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 32),
+    return ComingSoonOverlay(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(40.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. 대시보드 헤더 (인사말 & 날짜)
+            const Text(
+              '안녕하세요! 👋',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '2026년 5월 11일 월요일',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 32),
 
-          // 2. 메인 컨텐츠 영역 (좌측 6 : 우측 4 비율)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 좌측 컬럼 (AI 추천, 할 일, 일정)
-              Expanded(
-                flex: 6,
-                child: Column(
-                  children: [
-                    _buildAIBanner(context),
-                    const SizedBox(height: 24),
-                    _buildTodayTodos(),
-                    const SizedBox(height: 24),
-                    _buildTodaySchedule(),
-                  ],
+            // 2. 메인 컨텐츠 영역 (좌측 6 : 우측 4 비율)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 좌측 컬럼 (AI 추천, 할 일, 일정)
+                Expanded(
+                  flex: 6,
+                  child: Column(
+                    children: [
+                      _buildAIBanner(context),
+                      const SizedBox(height: 24),
+                      _buildTodayTodos(),
+                      const SizedBox(height: 24),
+                      _buildTodaySchedule(),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 32),
-              // 우측 컬럼 (진행률, 알림, 저장한 콘텐츠)
-              Expanded(
-                flex: 4,
-                child: Column(
-                  children: [
-                    _buildProgressSection(),
-                    const SizedBox(height: 24),
-                    _buildReviewNotifications(),
-                    const SizedBox(height: 24),
-                    _buildSavedContents(),
-                  ],
+                const SizedBox(width: 32),
+                // 우측 컬럼 (진행률, 알림, 저장한 콘텐츠)
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    children: [
+                      _buildProgressSection(),
+                      const SizedBox(height: 24),
+                      _buildReviewNotifications(),
+                      const SizedBox(height: 24),
+                      _buildSavedContents(),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -66,7 +70,7 @@ class DashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
             Theme.of(context).colorScheme.primary,
           ],
           begin: Alignment.topLeft,
@@ -308,7 +312,7 @@ class DashboardScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: priorityColor.withOpacity(0.1),
+            color: priorityColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
@@ -393,7 +397,7 @@ class DashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withOpacity(0.3)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
