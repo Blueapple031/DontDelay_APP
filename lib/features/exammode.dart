@@ -12,6 +12,8 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.all(40.0),
       child: Column(
@@ -26,11 +28,7 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.school,
-                        color: Color(0xFF6D28D9),
-                        size: 28,
-                      ),
+                      Icon(Icons.school, color: colorScheme.primary, size: 28),
                       const SizedBox(width: 12),
                       const Text(
                         '시험기간 모드',
@@ -89,7 +87,7 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
               const SizedBox(width: 16),
               _buildDDayCard('알고리즘 실기시험', 'D-11', Colors.orange),
               const SizedBox(width: 16),
-              _buildDDayCard('데이터베이스 기말', 'D-20', const Color(0xFF6D28D9)),
+              _buildDDayCard('데이터베이스 기말', 'D-20', colorScheme.primary),
             ],
           ),
           const SizedBox(height: 32),
@@ -129,7 +127,7 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: _isTimerRunning
-                                  ? const Color(0xFF6D28D9)
+                                  ? colorScheme.primary
                                   : Colors.grey.shade200,
                               width: 8,
                             ),
@@ -144,7 +142,7 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                                     fontSize: 56,
                                     fontWeight: FontWeight.bold,
                                     color: _isTimerRunning
-                                        ? const Color(0xFF6D28D9)
+                                        ? colorScheme.primary
                                         : Colors.black87,
                                   ),
                                 ),
@@ -187,7 +185,7 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _isTimerRunning
                                     ? Colors.orange
-                                    : const Color(0xFF6D28D9),
+                                    : colorScheme.primary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
@@ -267,8 +265,8 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                             value: 0.33,
                             minHeight: 8,
                             backgroundColor: Colors.grey.shade200,
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFF6D28D9),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              colorScheme.primary,
                             ),
                           ),
                         ),
@@ -355,7 +353,7 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
         color: isCompleted ? Colors.grey.shade50 : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isCompleted ? Colors.grey.shade200 : const Color(0xFFE0E7FF),
+          color: isCompleted ? Colors.grey.shade200 : const Color(0xFFE3EAB6),
         ), // 약간 푸른 테두리
       ),
       child: Row(

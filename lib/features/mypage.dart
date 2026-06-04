@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/theme_provider.dart';
+import 'todo/tag_provider.dart';
 
 class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
@@ -22,8 +23,9 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
 
   // 테마 색상 변경 다이얼로그
   void _showThemeSelectionDialog() {
-    final currentTheme = ref.watch(themeProvider).value ?? AppThemeType.grayscale;
-    
+    final currentTheme =
+        ref.watch(themeProvider).value ?? AppThemeType.classicGray;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -38,15 +40,22 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             mainAxisSize: MainAxisSize.min,
             children: AppThemeType.values.map((themeType) {
               final isSelected = themeType == currentTheme;
-              final Color themeColor = switch (themeType) {
-                AppThemeType.grayscale => Colors.grey.shade600,
-                AppThemeType.blue => Colors.blue,
-                AppThemeType.greenTea => Colors.teal,
+              final List<Color> themeColors = switch (themeType) {
+                AppThemeType.classicGray => const [
+                  Color(0xFFEBEBEB),
+                  Color(0xFF8E8E8E),
+                ],
+                AppThemeType.limeCoral => const [
+                  Color(0xFFC3DC68),
+                  Color(0xFF7D8F24),
+                ],
               };
+              final themeColor = themeColors.last;
 
               return GestureDetector(
                 onTap: () {
                   ref.read(themeProvider.notifier).setTheme(themeType);
+                  ref.invalidate(tagListProvider);
                   Navigator.pop(context);
                 },
                 child: MouseRegion(
@@ -57,10 +66,16 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: themeColor,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: themeColors,
+                        ),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? Colors.black87 : Colors.grey.shade300,
+                          color: isSelected
+                              ? Colors.black87
+                              : Colors.grey.shade300,
                           width: isSelected ? 3 : 1,
                         ),
                         boxShadow: isSelected
@@ -69,7 +84,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                                   color: themeColor.withValues(alpha: 0.4),
                                   blurRadius: 8,
                                   spreadRadius: 2,
-                                )
+                                ),
                               ]
                             : null,
                       ),
@@ -376,7 +391,6 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                         ),
                         child: Column(
                           children: [
-
                             _buildSettingMenu(
                               icon: Icons.palette_outlined,
                               title: '테마 색상 설정',
@@ -422,7 +436,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     Color titleColor = Colors.black87,
     Color? iconColor,
   }) {
-    final effectiveIconColor = iconColor ?? Theme.of(context).colorScheme.primary;
+    final effectiveIconColor =
+        iconColor ?? Theme.of(context).colorScheme.primary;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),

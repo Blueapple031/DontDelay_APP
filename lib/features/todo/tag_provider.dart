@@ -1,17 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/theme_provider.dart';
 import 'tag_model.dart';
 import 'tag_service.dart';
 
 final tagServiceProvider = Provider((ref) => TagService());
 
-final tagListProvider =
-    AsyncNotifierProvider<TagListNotifier, List<TagItem>>(TagListNotifier.new);
+final tagListProvider = AsyncNotifierProvider<TagListNotifier, List<TagItem>>(
+  TagListNotifier.new,
+);
 
 class TagListNotifier extends AsyncNotifier<List<TagItem>> {
   TagService get _service => ref.read(tagServiceProvider);
 
   @override
-  Future<List<TagItem>> build() => _service.loadTags();
+  Future<List<TagItem>> build() async {
+    final theme = await ref.watch(themeProvider.future);
+    return _service.loadTags(theme);
+  }
 
   List<TagItem> _current() => state.value ?? [TagItem.defaultTag];
 

@@ -173,7 +173,7 @@ class DashboardScreen extends StatelessWidget {
       icon: Icons.trending_up,
       child: Column(
         children: [
-          _buildProgressBar('운영체제', 0.65, const Color(0xFF6366F1)),
+          _buildProgressBar('운영체제', 0.65, const Color(0xFF7D8F24)),
           const SizedBox(height: 16),
           _buildProgressBar('알고리즘', 0.82, const Color(0xFF10B981)),
           const SizedBox(height: 16),
@@ -199,8 +199,8 @@ class DashboardScreen extends StatelessWidget {
           _buildNotificationCard(
             '자료구조 트리',
             '1주일 전 학습 · 복습 권장',
-            const Color(0xFFEFF6FF),
-            const Color(0xFF3B82F6),
+            const Color(0xFFF0F7CC),
+            const Color(0xFF7D8F24),
           ),
         ],
       ),
@@ -437,8 +437,8 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(width: 8),
               _buildBadge(
                 tag,
-                const Color(0xFFEEF2FF),
-                const Color(0xFF6366F1),
+                const Color(0xFFF0F7CC),
+                const Color(0xFF6F7F1F),
               ),
             ],
           ),
