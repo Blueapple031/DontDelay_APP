@@ -67,7 +67,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                           ),
                           ButtonSegment(
                             value: TodoViewMode.eisenhower,
-                            label: Text('아이젼하워'),
+                            label: Text('아이젠하워'),
                             icon: Icon(Icons.grid_4x4_outlined, size: 18),
                           ),
                         ],
@@ -77,7 +77,13 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                       ),
                       const SizedBox(width: 12),
                       OutlinedButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('AI 자동 분류 기능은 추후 구현될 예정입니다.'),
+                            ),
+                          );
+                        },
                         icon: Icon(
                           Icons.auto_awesome,
                           color: Theme.of(context).colorScheme.primary,
