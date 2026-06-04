@@ -1,79 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'auth/auth_provider.dart';
 
-class MyPageScreen extends StatefulWidget {
+class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
 
   @override
-  State<MyPageScreen> createState() => _MyPageScreenState();
+  ConsumerState<MyPageScreen> createState() => _MyPageScreenState();
 }
 
-class _MyPageScreenState extends State<MyPageScreen> {
-  // 상태 관리를 위한 임시 데이터
-  String _nickname = '안미룬이';
+class _MyPageScreenState extends ConsumerState<MyPageScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(userProfileProvider.notifier).load();
+    });
+  }
 
   // 프로필 사진 변경 로직 (추후 image_picker 등 연동 필요)
   void _changeProfileImage() {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('프로필 사진 변경 기능은 추후 구현됩니다.')));
-  }
-
-  // 닉네임 수정 다이얼로그
-  void _editNickname() {
-    final TextEditingController nicknameController = TextEditingController(
-      text: _nickname,
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          '닉네임 변경',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: nicknameController,
-          decoration: InputDecoration(
-            hintText: '새로운 닉네임을 입력하세요',
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              if (nicknameController.text.trim().isNotEmpty) {
-                setState(() {
-                  _nickname = nicknameController.text.trim();
-                });
-              }
-              Navigator.pop(context);
-            },
-            child: const Text(
-              '저장',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   // 비밀번호 변경 다이얼로그
@@ -166,8 +116,9 @@ class _MyPageScreenState extends State<MyPageScreen> {
               ),
             ),
             onPressed: () {
-              // TODO: 로그아웃 처리 및 로그인 화면으로 라우팅 이동
+              ref.read(authProvider.notifier).logout();
               Navigator.pop(context);
+              context.go('/login');
             },
             child: const Text(
               '로그아웃',
@@ -184,6 +135,12 @@ class _MyPageScreenState extends State<MyPageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = ref.watch(userProfileProvider);
+    final displayName = profile?.realName ?? '사용자';
+    final email = profile?.email ?? '';
+    final department = profile?.department ?? '';
+    final username = profile?.username ?? '';
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: Padding(
@@ -252,36 +209,43 @@ class _MyPageScreenState extends State<MyPageScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // 닉네임
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  _nickname,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit,
-                                    size: 20,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: _editNickname,
-                                  tooltip: '닉네임 수정',
-                                ),
-                              ],
-                            ),
-                            const Text(
-                              'user@example.com', // 임시 이메일
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
+                            Text(
+                              displayName,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (email.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                email,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                            if (department.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                department,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                            if (username.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                '@$username',
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
