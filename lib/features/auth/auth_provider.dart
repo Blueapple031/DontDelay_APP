@@ -5,27 +5,29 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_profile.dart';
 
-// 1. 세션(쿠키) 관리를 위한 Dio Provider 세팅
+// 세션 쿠키를 앱 전역에서 하나만 사용
+final cookieJarProvider = Provider<CookieJar>((ref) {
+  ref.keepAlive();
+  return CookieJar();
+});
+
 final dioProvider = Provider<Dio>((ref) {
+  ref.keepAlive();
   final dio = Dio(
     BaseOptions(
       baseUrl: 'http://dontdelay.duckdns.org:8080',
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 3),
+      headers: {'Content-Type': 'application/json'},
     ),
   );
 
-  // Spring Security 세션 ID 유지를 위해 CookieManager 추가
-  final cookieJar = CookieJar();
-  dio.interceptors.add(CookieManager(cookieJar));
-
+  dio.interceptors.add(CookieManager(ref.watch(cookieJarProvider)));
   return dio;
 });
 
-// 2. 로그인 상태 관리를 위한 Provider
 final authProvider = NotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
 
-// 3. 로그인 사용자 프로필 (GET /api/auth/me)
 final userProfileProvider =
     NotifierProvider<UserProfileNotifier, UserProfile?>(UserProfileNotifier.new);
 
@@ -33,7 +35,6 @@ class AuthNotifier extends Notifier<bool> {
   @override
   bool build() => false;
 
-  // 회원가입 API 연동 (성공 시 null, 실패 시 에러 메시지 반환)
   Future<String?> signUp({
     required String username,
     required String password,
@@ -62,7 +63,6 @@ class AuthNotifier extends Notifier<bool> {
     }
   }
 
-  // 로그인 API 연동
   Future<bool> login(String username, String password) async {
     try {
       final response = await ref.read(dioProvider).post(
@@ -72,7 +72,10 @@ class AuthNotifier extends Notifier<bool> {
 
       if (response.statusCode == 200) {
         state = true;
-        await ref.read(userProfileProvider.notifier).load();
+        await ref.read(userProfileProvider.notifier).applyFromResponse(
+              response.data,
+              refetchIfIncomplete: true,
+            );
         return true;
       }
       return false;
@@ -95,15 +98,40 @@ class UserProfileNotifier extends Notifier<UserProfile?> {
   Future<void> load() async {
     try {
       final response = await ref.read(dioProvider).get('/api/auth/me');
-      if (response.statusCode == 200 && response.data is Map) {
-        state = UserProfile.fromJson(
-          Map<String, dynamic>.from(response.data as Map),
-        );
+      if (response.statusCode == 200) {
+        await applyFromResponse(response.data, refetchIfIncomplete: false);
+        return;
       }
+      debugPrint('프로필 조회 실패: status=${response.statusCode} body=${response.data}');
     } on DioException catch (e) {
-      debugPrint('프로필 조회 에러: $e');
-      state = null;
+      debugPrint(
+        '프로필 조회 에러: status=${e.response?.statusCode} body=${e.response?.data}',
+      );
     }
+    state = null;
+  }
+
+  /// 로그인·/me 응답 본문에서 프로필 반영. 필드가 비어 있으면 /me 재조회.
+  Future<void> applyFromResponse(
+    dynamic data, {
+    required bool refetchIfIncomplete,
+  }) async {
+    final parsed = UserProfile.tryParse(data);
+    if (parsed != null && _hasCoreFields(parsed)) {
+      state = parsed;
+      return;
+    }
+
+    if (!refetchIfIncomplete) {
+      if (parsed != null) state = parsed;
+      return;
+    }
+
+    await load();
+  }
+
+  bool _hasCoreFields(UserProfile profile) {
+    return profile.realName.isNotEmpty || profile.username.isNotEmpty;
   }
 
   void clear() => state = null;
