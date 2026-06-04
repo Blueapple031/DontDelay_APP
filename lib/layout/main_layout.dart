@@ -45,6 +45,7 @@ class MainLayout extends ConsumerWidget {
                       'DontDelay',
                       style: Theme.of(context).textTheme.headlineLarge!.copyWith(
                         fontSize: 28,
+                        
                         color: cs.onSurface,
                       ),
                     ),

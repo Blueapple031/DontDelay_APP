@@ -25,26 +25,26 @@ class AppThemes {
       );
 
   static TextTheme _fixedTextTheme(TextTheme base) => base.copyWith(
-    // 큰 제목 계열 → ExtraBold (w800)
-    displayLarge: _fix(base.displayLarge, FontWeight.w800),
-    displayMedium: _fix(base.displayMedium, FontWeight.w800),
-    displaySmall: _fix(base.displaySmall, FontWeight.w800),
-    // 헤드라인 계열 → Bold (w700)
-    headlineLarge: _fix(base.headlineLarge, FontWeight.w700),
-    headlineMedium: _fix(base.headlineMedium, FontWeight.w700),
-    headlineSmall: _fix(base.headlineSmall, FontWeight.w700),
-    // 타이틀 계열 → w600 (500·600은 Flutter가 w700로 대체)
-    titleLarge: _fix(base.titleLarge, FontWeight.w600),
-    titleMedium: _fix(base.titleMedium, FontWeight.w600),
-    titleSmall: _fix(base.titleSmall, FontWeight.w600),
-    // 본문 계열 → Regular (w400)
-    bodyLarge: _fix(base.bodyLarge, FontWeight.w400),
-    bodyMedium: _fix(base.bodyMedium, FontWeight.w400),
-    bodySmall: _fix(base.bodySmall, FontWeight.w400),
-    // 레이블 계열 → w500·w600 (강조, Flutter가 가장 가까운 굵기로 대체)
-    labelLarge: _fix(base.labelLarge, FontWeight.w600),
-    labelMedium: _fix(base.labelMedium, FontWeight.w500),
-    labelSmall: _fix(base.labelSmall, FontWeight.w500),
+    // 큰 제목 계열 → Heavy (w900)
+    displayLarge: _fix(base.displayLarge, FontWeight.w900),
+    displayMedium: _fix(base.displayMedium, FontWeight.w900),
+    displaySmall: _fix(base.displaySmall, FontWeight.w900),
+    // 헤드라인 계열 → Heavy (w900)
+    headlineLarge: _fix(base.headlineLarge, FontWeight.w900),
+    headlineMedium: _fix(base.headlineMedium, FontWeight.w900),
+    headlineSmall: _fix(base.headlineSmall, FontWeight.w900),
+    // 타이틀 계열 → Heavy (w900)
+    titleLarge: _fix(base.titleLarge, FontWeight.w900),
+    titleMedium: _fix(base.titleMedium, FontWeight.w900),
+    titleSmall: _fix(base.titleSmall, FontWeight.w900),
+    // 본문 계열 → Light (w300)
+    bodyLarge: _fix(base.bodyLarge, FontWeight.w300),
+    bodyMedium: _fix(base.bodyMedium, FontWeight.w300),
+    bodySmall: _fix(base.bodySmall, FontWeight.w300),
+    // 레이블 계열 → Heavy (w900)
+    labelLarge: _fix(base.labelLarge, FontWeight.w900),
+    labelMedium: _fix(base.labelMedium, FontWeight.w900),
+    labelSmall: _fix(base.labelSmall, FontWeight.w900),
   );
 
   static ThemeData _base({required ColorScheme colorScheme}) {
