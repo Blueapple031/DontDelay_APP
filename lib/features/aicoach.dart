@@ -13,9 +13,9 @@ class AiCoachScreen extends StatelessWidget {
           // 1. 헤더 영역
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.auto_awesome,
-                color: Color(0xFF6D28D9),
+                color: Theme.of(context).colorScheme.primary,
                 size: 28,
               ),
               const SizedBox(width: 12),
@@ -51,9 +51,10 @@ class AiCoachScreen extends StatelessWidget {
                     child: ListView(
                       padding: const EdgeInsets.all(24),
                       children: [
-                        _buildUserMessage('오늘 뭐부터 해야 해?', '14:23'),
+                        _buildUserMessage(context, '오늘 뭐부터 해야 해?', '14:23'),
                         const SizedBox(height: 24),
                         _buildAiMessage(
+                          context: context,
                           time: '14:23',
                           content:
                               '안녕하세요! 오늘의 우선순위를 분석해드릴게요.\n\n'
@@ -126,7 +127,7 @@ class AiCoachScreen extends StatelessWidget {
                             ElevatedButton(
                               onPressed: () {},
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6D28D9),
+                                backgroundColor: Theme.of(context).colorScheme.primary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -163,8 +164,7 @@ class AiCoachScreen extends StatelessWidget {
     );
   }
 
-  // 사용자 메시지 버블
-  Widget _buildUserMessage(String text, String time) {
+  Widget _buildUserMessage(BuildContext context, String text, String time) {
     return Align(
       alignment: Alignment.centerRight,
       child: Column(
@@ -172,9 +172,9 @@ class AiCoachScreen extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: const BoxDecoration(
-              color: Color(0xFF6D28D9),
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
                 bottomLeft: Radius.circular(16),
@@ -196,8 +196,8 @@ class AiCoachScreen extends StatelessWidget {
     );
   }
 
-  // AI 메시지 버블 (추천 카드 포함 가능)
   Widget _buildAiMessage({
+    required BuildContext context,
     required String content,
     required String time,
     List<Map<String, dynamic>>? recommendations,
@@ -210,12 +210,12 @@ class AiCoachScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3E8FF),
+              color: Theme.of(context).colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.auto_awesome,
-              color: Color(0xFF6D28D9),
+              color: Theme.of(context).colorScheme.primary,
               size: 20,
             ),
           ),

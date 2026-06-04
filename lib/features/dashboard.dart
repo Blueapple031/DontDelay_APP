@@ -31,7 +31,7 @@ class DashboardScreen extends StatelessWidget {
                 flex: 6,
                 child: Column(
                   children: [
-                    _buildAIBanner(),
+                    _buildAIBanner(context),
                     const SizedBox(height: 24),
                     _buildTodayTodos(),
                     const SizedBox(height: 24),
@@ -60,12 +60,15 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAIBanner() {
+  Widget _buildAIBanner(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            Theme.of(context).colorScheme.primary,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -105,7 +108,7 @@ class DashboardScreen extends StatelessWidget {
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF6D28D9),
+                    foregroundColor: Theme.of(context).colorScheme.primary,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

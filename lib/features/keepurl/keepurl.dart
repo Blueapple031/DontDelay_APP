@@ -189,7 +189,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6D28D9),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -230,7 +230,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide:
-                          const BorderSide(color: Color(0xFF6D28D9)),
+                          BorderSide(color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                 ),
@@ -371,7 +371,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => setState(() => _selectedFolderId = folderId),
-      selectedColor: const Color(0xFF6D28D9),
+      selectedColor: Theme.of(context).colorScheme.primary,
       backgroundColor: Colors.white,
       labelStyle: TextStyle(
         color: isSelected ? Colors.white : Colors.black87,
@@ -381,7 +381,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
           color: isSelected
-              ? const Color(0xFF6D28D9)
+              ? Theme.of(context).colorScheme.primary
               : Colors.grey.shade300,
         ),
       ),
@@ -413,9 +413,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
               border: isHover
-                  ? Border.all(color: const Color(0xFF6D28D9), width: 2)
+                  ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
                   : null,
-              color: isHover ? const Color(0xFFF5F3FF) : null,
+              color: isHover ? Theme.of(context).colorScheme.primaryContainer : null,
             ),
             child: chip,
           );
@@ -1113,7 +1113,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFF6D28D9)),
+            border: Border.all(color: Theme.of(context).colorScheme.primary),
           ),
           child: Text(
             item.title,

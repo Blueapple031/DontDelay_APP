@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/theme/theme_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'auth/auth_provider.dart';
 
@@ -24,6 +26,141 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('프로필 사진 변경 기능은 추후 구현됩니다.')));
+  }
+
+  // 테마 색상 변경 다이얼로그
+  void _showThemeSelectionDialog() {
+    final currentTheme = ref.watch(themeProvider).value ?? AppThemeType.grayscale;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          '테마 색상 변경',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.min,
+            children: AppThemeType.values.map((themeType) {
+              final isSelected = themeType == currentTheme;
+              final Color themeColor = switch (themeType) {
+                AppThemeType.grayscale => Colors.grey.shade600,
+                AppThemeType.blue => Colors.blue,
+                AppThemeType.greenTea => Colors.teal,
+              };
+
+              return GestureDetector(
+                onTap: () {
+                  ref.read(themeProvider.notifier).setTheme(themeType);
+                  Navigator.pop(context);
+                },
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Tooltip(
+                    message: themeType.label,
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: themeColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.black87 : Colors.grey.shade300,
+                          width: isSelected ? 3 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: themeColor.withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 24,
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기', style: TextStyle(color: Colors.grey)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 닉네임 수정 다이얼로그
+  void _editNickname() {
+    final TextEditingController nicknameController = TextEditingController(
+      text: _nickname,
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          '닉네임 변경',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: nicknameController,
+          decoration: InputDecoration(
+            hintText: '새로운 닉네임을 입력하세요',
+            filled: true,
+            fillColor: Colors.grey.shade100,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              if (nicknameController.text.trim().isNotEmpty) {
+                setState(() {
+                  _nickname = nicknameController.text.trim();
+                });
+              }
+              Navigator.pop(context);
+            },
+            child: const Text(
+              '저장',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // 비밀번호 변경 다이얼로그
@@ -52,7 +189,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -135,6 +272,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColor = Theme.of(context).colorScheme.primary;
     final profile = ref.watch(userProfileProvider);
     final displayName = profile?.realName ?? '사용자';
     final email = profile?.email ?? '';
@@ -191,7 +329,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF4F46E5),
+                                      color: themeColor,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.white,
@@ -261,12 +399,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                         child: Column(
                           children: [
                             _buildSettingMenu(
-                              icon: Icons.category_rounded,
-                              title: '나의 카테고리 관리',
-                              subtitle: '일정 카테고리를 추가, 수정, 삭제합니다.',
-                              onTap: () {
-                                // TODO: 카테고리 관리 페이지로 이동
-                              },
+                              icon: Icons.palette_outlined,
+                              title: '테마 색상 설정',
+                              subtitle: '앱의 기본 테마 색상을 변경합니다.',
+                              onTap: _showThemeSelectionDialog,
                             ),
                             const Divider(height: 1),
                             _buildSettingMenu(
@@ -305,8 +441,9 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     required String subtitle,
     required VoidCallback onTap,
     Color titleColor = Colors.black87,
-    Color iconColor = const Color(0xFF4F46E5),
+    Color? iconColor,
   }) {
+    final effectiveIconColor = iconColor ?? Theme.of(context).colorScheme.primary;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -317,10 +454,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: effectiveIconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor, size: 24),
+              child: Icon(icon, color: effectiveIconColor, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
