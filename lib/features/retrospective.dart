@@ -359,6 +359,8 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                         controller: titleController,
                         style: const TextStyle(fontSize: 15),
                         decoration: InputDecoration(
+                          hintText: '회고 제목을 입력하세요',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
                           filled: true,
                           fillColor: Colors.grey.shade50,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -428,7 +430,7 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                         controller: tagsController,
                         style: const TextStyle(fontSize: 14),
                         decoration: InputDecoration(
-                          hintText: '예: 학습, 복습',
+                          hintText: '예: 수업, 과제, 스터디, 과목명',
                           hintStyle: TextStyle(color: Colors.grey.shade400),
                           filled: true,
                           fillColor: Colors.grey.shade50,

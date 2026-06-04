@@ -53,8 +53,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               final isSelected = themeType == currentTheme;
               final List<Color> themeColors = switch (themeType) {
                 AppThemeType.classicGray => const [
-                  Color(0xFFEBEBEB),
-                  Color(0xFF8E8E8E),
+                  Color(0xFFE5E7EB),
+                  Color(0xFF111827),
                 ],
                 AppThemeType.limeCoral => const [
                   Color(0xFFC3DC68),
@@ -71,41 +71,62 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 },
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
-                  child: Tooltip(
-                    message: themeType.label,
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: themeColors,
+                  child: SizedBox(
+                    width: 72,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: themeColors,
+                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.black87
+                                  : Colors.grey.shade300,
+                              width: isSelected ? 3 : 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: themeColor.withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 24,
+                                )
+                              : null,
                         ),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? Colors.black87
-                              : Colors.grey.shade300,
-                          width: isSelected ? 3 : 1,
+                        const SizedBox(height: 8),
+                        Text(
+                          themeType.label,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? Colors.black87
+                                : Colors.grey.shade600,
+                          ),
                         ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: themeColor.withValues(alpha: 0.4),
-                                  blurRadius: 8,
-                                  spreadRadius: 2,
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 24,
-                            )
-                          : null,
+                      ],
                     ),
                   ),
                 ),

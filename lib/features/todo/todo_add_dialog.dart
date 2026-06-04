@@ -100,8 +100,7 @@ class _TodoDialogState extends ConsumerState<_TodoDialog> {
               controller: _titleCtl,
               autofocus: true,
               decoration: InputDecoration(
-                labelText: '할 일 제목',
-                hintText: '예: 운영체제 3단원 복습',
+                hintText: '할 일 제목',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

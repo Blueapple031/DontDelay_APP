@@ -71,34 +71,34 @@ class AppThemes {
     );
   }
 
-  // ─── 클래식 회색 테마 ─────────────────────────────────────────────────────
-  // 변경 전 기본 테마입니다.
+  // ─── 클래식 흑백 테마 ─────────────────────────────────────────────────────
+  // 높은 대비의 뉴트럴 팔레트로 정보 구조가 또렷하게 보이도록 구성합니다.
   static final ThemeData _classicGray = _base(
     colorScheme: const ColorScheme(
       brightness: Brightness.light,
-      primary: Color(0xFF8E8E8E),
+      primary: Color(0xFF111827),
       onPrimary: Color(0xFFFFFFFF),
-      primaryContainer: Color(0xFFEBEBEB),
-      onPrimaryContainer: Color(0xFF5A5A5A),
-      secondary: Color(0xFFAAAAAA),
+      primaryContainer: Color(0xFFE5E7EB),
+      onPrimaryContainer: Color(0xFF111827),
+      secondary: Color(0xFF4B5563),
       onSecondary: Color(0xFFFFFFFF),
-      secondaryContainer: Color(0xFFF2F2F2),
-      onSecondaryContainer: Color(0xFF6A6A6A),
-      error: Color(0xFFB08A8A),
+      secondaryContainer: Color(0xFFF3F4F6),
+      onSecondaryContainer: Color(0xFF1F2937),
+      error: Color(0xFFB42318),
       onError: Color(0xFFFFFFFF),
-      errorContainer: Color(0xFFF5EAEA),
-      onErrorContainer: Color(0xFF7A5050),
-      surface: Color(0xFFF8F8F8),
-      onSurface: Color(0xFF4A4A4A),
+      errorContainer: Color(0xFFFEE4E2),
+      onErrorContainer: Color(0xFF7A271A),
+      surface: Color(0xFFF7F8FA),
+      onSurface: Color(0xFF111827),
       surfaceContainerLowest: Color(0xFFFFFFFF),
-      onSurfaceVariant: Color(0xFF7A7A7A),
-      outline: Color(0xFFD8D8D8),
-      outlineVariant: Color(0xFFECECEC),
+      onSurfaceVariant: Color(0xFF4B5563),
+      outline: Color(0xFFCBD5E1),
+      outlineVariant: Color(0xFFE2E8F0),
       shadow: Color(0xFF000000),
       scrim: Color(0xFF000000),
-      inverseSurface: Color(0xFF4A4A4A),
-      onInverseSurface: Color(0xFFF8F8F8),
-      inversePrimary: Color(0xFFCCCCCC),
+      inverseSurface: Color(0xFF111827),
+      onInverseSurface: Color(0xFFF9FAFB),
+      inversePrimary: Color(0xFFE5E7EB),
     ),
   );
 
