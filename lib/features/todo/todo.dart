@@ -18,162 +18,245 @@ class TodoScreen extends ConsumerStatefulWidget {
 
 class _TodoScreenState extends ConsumerState<TodoScreen> {
   TodoViewMode _viewMode = TodoViewMode.kanban;
+  bool _isDragging = false;
+  final ValueNotifier<bool> _isOverTrashNotifier = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _isOverTrashNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final asyncTodos = ref.watch(todoListProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(40.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    '할 일 관리',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '할 일 관리',
+                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '할 일을 추가하고 상태를 변경하세요',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '할 일을 추가하고 상태를 변경하세요',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  Row(
+                    children: [
+                      SegmentedButton<TodoViewMode>(
+                        segments: const [
+                          ButtonSegment(
+                            value: TodoViewMode.kanban,
+                            label: Text('칸반'),
+                            icon: Icon(Icons.view_column_outlined, size: 18),
+                          ),
+                          ButtonSegment(
+                            value: TodoViewMode.eisenhower,
+                            label: Text('아이젼하워'),
+                            icon: Icon(Icons.grid_4x4_outlined, size: 18),
+                          ),
+                        ],
+                        selected: {_viewMode},
+                        onSelectionChanged: (s) =>
+                            setState(() => _viewMode = s.first),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () {},
+                        icon: Icon(
+                          Icons.auto_awesome,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 18,
+                        ),
+                        label: Text(
+                          'AI 자동 분류',
+                          style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => showTodoAddDialog(context, ref),
+                        icon: const Icon(Icons.add, size: 18, color: Colors.white),
+                        label: const Text(
+                          '새 할 일 추가',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  SegmentedButton<TodoViewMode>(
-                    segments: const [
-                      ButtonSegment(
-                        value: TodoViewMode.kanban,
-                        label: Text('칸반'),
-                        icon: Icon(Icons.view_column_outlined, size: 18),
-                      ),
-                      ButtonSegment(
-                        value: TodoViewMode.eisenhower,
-                        label: Text('아이젼하워'),
-                        icon: Icon(Icons.grid_4x4_outlined, size: 18),
-                      ),
-                    ],
-                    selected: {_viewMode},
-                    onSelectionChanged: (s) =>
-                        setState(() => _viewMode = s.first),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.auto_awesome,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 18,
-                    ),
-                    label: Text(
-                      'AI 자동 분류',
-                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: () => showTodoAddDialog(context, ref),
-                    icon: const Icon(Icons.add, size: 18, color: Colors.white),
-                    label: const Text(
-                      '새 할 일 추가',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 32),
+
+              Expanded(
+                child: asyncTodos.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
+                  data: (todos) {
+                    if (_viewMode == TodoViewMode.eisenhower) {
+                      return TodoEisenhowerBoard(todos: todos);
+                    }
+                    final tags = ref.watch(tagListProvider).value ??
+                        [TagItem.defaultTag];
+                    final tagMap = {
+                      for (final t in tags) t.id: t
+                    };
+                    final todoItems =
+                        todos.where((t) => t.status == TodoStatus.todo).toList();
+                    final inProgressItems = todos
+                        .where((t) => t.status == TodoStatus.inProgress)
+                        .toList();
+                    final doneItems =
+                        todos.where((t) => t.status == TodoStatus.done).toList();
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildKanbanColumn(
+                          context: context,
+                          ref: ref,
+                          title: '해야 할 일',
+                          status: TodoStatus.todo,
+                          items: todoItems,
+                          tagMap: tagMap,
+                        ),
+                        const SizedBox(width: 24),
+                        _buildKanbanColumn(
+                          context: context,
+                          ref: ref,
+                          title: '진행 중',
+                          status: TodoStatus.inProgress,
+                          items: inProgressItems,
+                          tagMap: tagMap,
+                        ),
+                        const SizedBox(width: 24),
+                        _buildKanbanColumn(
+                          context: context,
+                          ref: ref,
+                          title: '완료',
+                          status: TodoStatus.done,
+                          items: doneItems,
+                          tagMap: tagMap,
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
-
-          Expanded(
-            child: asyncTodos.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
-              data: (todos) {
-                if (_viewMode == TodoViewMode.eisenhower) {
-                  return TodoEisenhowerBoard(todos: todos);
-                }
-                final tags = ref.watch(tagListProvider).value ??
-                    [TagItem.defaultTag];
-                final tagMap = {
-                  for (final t in tags) t.id: t
-                };
-                final todoItems =
-                    todos.where((t) => t.status == TodoStatus.todo).toList();
-                final inProgressItems = todos
-                    .where((t) => t.status == TodoStatus.inProgress)
-                    .toList();
-                final doneItems =
-                    todos.where((t) => t.status == TodoStatus.done).toList();
-
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildKanbanColumn(
-                      context: context,
-                      ref: ref,
-                      title: '해야 할 일',
-                      status: TodoStatus.todo,
-                      items: todoItems,
-                      tagMap: tagMap,
+        ),
+        if (_isDragging)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 30,
+            child: Center(
+              child: DragTarget<TodoItem>(
+                onWillAcceptWithDetails: (details) {
+                  _isOverTrashNotifier.value = true;
+                  return true;
+                },
+                onLeave: (details) {
+                  _isOverTrashNotifier.value = false;
+                },
+                onAcceptWithDetails: (details) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  setState(() {
+                    _isDragging = false;
+                  });
+                  _isOverTrashNotifier.value = false;
+                  try {
+                    await ref
+                        .read(todoListProvider.notifier)
+                        .deleteTodo(details.data.id);
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('할 일이 삭제되었습니다.')),
+                    );
+                  } catch (e) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text('삭제에 실패했습니다: $e')),
+                    );
+                  }
+                },
+                builder: (context, candidateData, rejectedData) {
+                  final isOver = candidateData.isNotEmpty;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    width: isOver ? 64 : 56,
+                    height: isOver ? 64 : 56,
+                    decoration: BoxDecoration(
+                      color: isOver ? Colors.red.shade50 : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isOver ? Colors.red.shade400 : Colors.grey.shade300,
+                        width: isOver ? 2.0 : 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isOver
+                              ? Colors.red.withValues(alpha: 0.15)
+                              : Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
                     ),
-                    const SizedBox(width: 24),
-                    _buildKanbanColumn(
-                      context: context,
-                      ref: ref,
-                      title: '진행 중',
-                      status: TodoStatus.inProgress,
-                      items: inProgressItems,
-                      tagMap: tagMap,
+                    child: Icon(
+                      isOver
+                          ? Icons.delete_forever
+                          : Icons.delete_outline,
+                      color: isOver
+                          ? Colors.red.shade600
+                          : Colors.grey.shade600,
+                      size: isOver ? 26 : 22,
                     ),
-                    const SizedBox(width: 24),
-                    _buildKanbanColumn(
-                      context: context,
-                      ref: ref,
-                      title: '완료',
-                      status: TodoStatus.done,
-                      items: doneItems,
-                      tagMap: tagMap,
-                    ),
-                  ],
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -269,12 +352,26 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   ) {
     return Draggable<TodoItem>(
       data: item,
+      onDragStarted: () => setState(() => _isDragging = true),
+      onDragEnd: (_) => setState(() {
+        _isDragging = false;
+        _isOverTrashNotifier.value = false;
+      }),
+      onDraggableCanceled: (_, __) => setState(() {
+        _isDragging = false;
+        _isOverTrashNotifier.value = false;
+      }),
       feedback: Material(
         elevation: 8,
         borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          width: 280,
-          child: _buildTaskCardContent(item, tagMap),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _isOverTrashNotifier,
+          builder: (context, isOver, child) {
+            return SizedBox(
+              width: 280,
+              child: _buildTaskCardContent(item, tagMap, isOverTrash: isOver),
+            );
+          },
         ),
       ),
       childWhenDragging: Opacity(
@@ -293,7 +390,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   }
 
   Widget _buildTaskCardContent(
-      TodoItem item, Map<String, TagItem> tagMap) {
+      TodoItem item, Map<String, TagItem> tagMap, {bool isOverTrash = false}) {
     final tag = tagMap[item.tag] ?? TagItem.defaultTag;
     final tagColor = hexToColor(tag.colorHex);
     return Container(
@@ -302,7 +399,10 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isOverTrash ? Colors.red.shade400 : Colors.grey.shade200,
+          width: isOverTrash ? 2.0 : 1.0,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
