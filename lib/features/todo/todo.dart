@@ -284,19 +284,22 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
         },
         builder: (context, candidateData, rejectedData) {
           final isHovering = candidateData.isNotEmpty;
-          return Container(
+          final colorScheme = Theme.of(context).colorScheme;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
             decoration: BoxDecoration(
               color: isHovering
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+                  ? colorScheme.primary.withValues(alpha: 0.045)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
-              border: isHovering
-                  ? Border.all(
-                      color: Theme.of(context).colorScheme.primary
-                          .withValues(alpha: 0.3),
-                      width: 2,
-                    )
-                  : null,
+              border: Border.all(
+                color: isHovering
+                    ? colorScheme.primary.withValues(alpha: 0.16)
+                    : Colors.transparent,
+                width: 1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +372,12 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
           builder: (context, isOver, child) {
             return SizedBox(
               width: 280,
-              child: _buildTaskCardContent(item, tagMap, isOverTrash: isOver),
+              child: _buildTaskCardContent(
+                item,
+                tagMap,
+                isOverTrash: isOver,
+                includeMargin: false,
+              ),
             );
           },
         ),
@@ -390,11 +398,16 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   }
 
   Widget _buildTaskCardContent(
-      TodoItem item, Map<String, TagItem> tagMap, {bool isOverTrash = false}) {
+    TodoItem item,
+    Map<String, TagItem> tagMap, {
+    bool isOverTrash = false,
+    bool includeMargin = true,
+  }) {
     final tag = tagMap[item.tag] ?? TagItem.defaultTag;
     final tagColor = hexToColor(tag.colorHex);
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin:
+          includeMargin ? const EdgeInsets.only(bottom: 12) : EdgeInsets.zero,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,

@@ -399,34 +399,40 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Padding(
                     padding:
                         const EdgeInsets.fromLTRB(6, 5, 6, 3),
-                    child: isToday
-                        ? Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: _kPurple,
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '${date.day}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                    child: SizedBox(
+                      height: 24,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: isToday
+                            ? Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: _kPurple,
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${date.day}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                '${date.day}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: inMonth
+                                      ? Colors.black87
+                                      : Colors.grey.shade400,
+                                ),
                               ),
-                            ),
-                          )
-                        : Text(
-                            '${date.day}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: inMonth
-                                  ? Colors.black87
-                                  : Colors.grey.shade400,
-                            ),
-                          ),
+                      ),
+                    ),
                   ),
                   ...todos
                       .take(2)
