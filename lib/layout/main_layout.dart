@@ -45,7 +45,7 @@ class MainLayout extends ConsumerWidget {
                       'DontDelay',
                       style: Theme.of(context).textTheme.headlineLarge!.copyWith(
                         fontSize: 28,
-                        
+                        fontWeight: FontWeight.w900,
                         color: cs.onSurface,
                       ),
                     ),
@@ -88,7 +88,9 @@ class MainLayout extends ConsumerWidget {
                               item['title'] as String,
                               style: Theme.of(context).textTheme.labelLarge!.copyWith(
                                 color: isSelected ? selectedColor : cs.onSurface,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                fontWeight: isSelected
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
                                 fontSize: 14,
                               ),
                             ),
