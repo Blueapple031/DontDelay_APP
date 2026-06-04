@@ -57,7 +57,7 @@ class MyApp extends ConsumerWidget {
     // AsyncNotifier: 로드 전에는 기본 테마(무채색)로 fallback
     final themeType = ref
         .watch(themeProvider)
-        .maybeWhen(data: (t) => t, orElse: () => AppThemeType.grayscale);
+        .maybeWhen(data: (t) => t, orElse: () => AppThemeType.classicGray);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'DontDelay',

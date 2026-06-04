@@ -23,21 +23,18 @@ class TodoEisenhowerBoard extends ConsumerStatefulWidget {
   static const double _cardW = 136;
   static const double _cardH = 68;
   static const double _axisLeft = 40;
+
   /// 드롭 판정: 플롯 밖으로 카드 절반이 나가도 가장자리(1·8) 인식되도록 여유.
   static const double _dropEdgeSlop = 56;
 
   /// 긴급 `scoreMin…scoreMax` 각 구간의 중심 X.
   static double urgencyCenterX(int u, double plotW) =>
-      plotW *
-      (math.min(math.max(u, scoreMin), scoreMax) - 0.5) /
-      scoreBins;
+      plotW * (math.min(math.max(u, scoreMin), scoreMax) - 0.5) / scoreBins;
 
   /// 중요도 `scoreMax` 위쪽 · `scoreMin` 아래쪽, 구간 중심 Y.
   static double importanceCenterY(int imp, double plotH) =>
       plotH *
-      (1 -
-          (math.min(math.max(imp, scoreMin), scoreMax) - 0.5) /
-              scoreBins);
+      (1 - (math.min(math.max(imp, scoreMin), scoreMax) - 0.5) / scoreBins);
 
   static Color priorityColor(TodoPriority p) {
     switch (p) {
@@ -135,26 +132,26 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
     swCollapsed = swCollapsed.clamp(56.0, TodoEisenhowerBoard._cardW);
     shCollapsed = shCollapsed.clamp(40.0, TodoEisenhowerBoard._cardH);
 
-    final staggerXCollapsed = math.min(4.5 + (n > 4 ? -0.5 : 0.0),
-        math.max(2.8, swCollapsed * 0.042)).toDouble();
-    final staggerYCollapsed =
-        math.min(2.8, math.max(1.8, shCollapsed * 0.036)).toDouble();
+    final staggerXCollapsed = math
+        .min(4.5 + (n > 4 ? -0.5 : 0.0), math.max(2.8, swCollapsed * 0.042))
+        .toDouble();
+    final staggerYCollapsed = math
+        .min(2.8, math.max(1.8, shCollapsed * 0.036))
+        .toDouble();
 
     var staggerX = staggerXCollapsed;
-    double spanCollapsed =
-        n > 1 ? (n - 1) * staggerX + swCollapsed : swCollapsed;
+    double spanCollapsed = n > 1
+        ? (n - 1) * staggerX + swCollapsed
+        : swCollapsed;
     if (spanCollapsed > plotW - 12 && n > 1) {
-      staggerX = math.max(
-        2.2,
-        (plotW - 12 - swCollapsed) / (n - 1),
-      ).clamp(2.2, staggerXCollapsed).toDouble();
+      staggerX = math
+          .max(2.2, (plotW - 12 - swCollapsed) / (n - 1))
+          .clamp(2.2, staggerXCollapsed)
+          .toDouble();
       spanCollapsed = (n - 1) * staggerX + swCollapsed;
     }
     var edgeColl = cx - spanCollapsed / 2;
-    edgeColl = edgeColl.clamp(
-      8.0,
-      math.max(8.0, plotW - spanCollapsed - 8),
-    );
+    edgeColl = edgeColl.clamp(8.0, math.max(8.0, plotW - spanCollapsed - 8));
 
     final availW = (plotW - 24).clamp(80.0, double.infinity);
     final targetWExpanded = math.min(
@@ -162,7 +159,8 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
       n > 0 ? availW / (n + math.max(0, n - 1) * 0.42) : swCollapsed,
     );
     final targetHExpanded =
-        TodoEisenhowerBoard._cardH * (targetWExpanded / TodoEisenhowerBoard._cardW);
+        TodoEisenhowerBoard._cardH *
+        (targetWExpanded / TodoEisenhowerBoard._cardW);
     final overlap = math.min(22.0, targetWExpanded * 0.12);
     var spanExpanded = n <= 1
         ? targetWExpanded
@@ -191,20 +189,20 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
         ly = cy - lh / 2;
       } else {
         final u = i / (n - 1);
-        final strideExpanded =
-            math.max(targetWExpanded - overlap, targetWExpanded * 0.4);
+        final strideExpanded = math.max(
+          targetWExpanded - overlap,
+          targetWExpanded * 0.4,
+        );
         lx = lerpDouble(
-              edgeColl + i * staggerX,
-              edgeExpanded + i * strideExpanded,
-              t,
-            )!;
+          edgeColl + i * staggerX,
+          edgeExpanded + i * strideExpanded,
+          t,
+        )!;
         ly = lerpDouble(
-              cy - lh / 2 + i * staggerYCollapsed,
-              cy -
-                  lh / 2 +
-                  math.sin(u * math.pi) * lh * _lerpSinLift(n),
-              t,
-            )!;
+          cy - lh / 2 + i * staggerYCollapsed,
+          cy - lh / 2 + math.sin(u * math.pi) * lh * _lerpSinLift(n),
+          t,
+        )!;
       }
 
       late double angle;
@@ -218,7 +216,9 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
       lx = lx.clamp(8.0, math.max(8.0, plotW - lw - 8));
       ly = ly.clamp(8.0, math.max(8.0, plotH - lh - 8));
 
-      out.add(_CardSlot(left: lx, top: ly, width: lw, height: lh, angle: angle));
+      out.add(
+        _CardSlot(left: lx, top: ly, width: lw, height: lh, angle: angle),
+      );
     }
     return out;
   }
@@ -248,9 +248,10 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
     final n = norm.clamp(0.0, 1.0);
     if (n <= 0) return TodoEisenhowerBoard.scoreMin;
     if (n >= 1) return TodoEisenhowerBoard.scoreMax;
-    return (n * TodoEisenhowerBoard.scoreBins)
-        .ceil()
-        .clamp(TodoEisenhowerBoard.scoreMin, TodoEisenhowerBoard.scoreMax);
+    return (n * TodoEisenhowerBoard.scoreBins).ceil().clamp(
+      TodoEisenhowerBoard.scoreMin,
+      TodoEisenhowerBoard.scoreMax,
+    );
   }
 
   static (int urgency, int importance) _scoresFromLocal(
@@ -273,8 +274,8 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
       return null;
     }
     final localTopLeft = box.globalToLocal(globalFeedbackTopLeft);
-    final center = localTopLeft +
-        Offset(_dragFeedbackW / 2, _dragFeedbackH / 2);
+    final center =
+        localTopLeft + Offset(_dragFeedbackW / 2, _dragFeedbackH / 2);
     return _scoresFromLocal(center, box.size);
   }
 
@@ -294,22 +295,18 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
 
   Future<void> _persistDropScores(String todoId, int u, int imp) async {
     try {
-      await ref.read(todoListProvider.notifier).updateUrgencyImportance(
-            todoId,
-            u,
-            imp,
-          );
+      await ref
+          .read(todoListProvider.notifier)
+          .updateUrgencyImportance(todoId, u, imp);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('저장에 실패했습니다: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
     }
   }
 
-  static Map<String, List<TodoItem>> _groupByScores(
-    List<TodoItem> visible,
-  ) {
+  static Map<String, List<TodoItem>> _groupByScores(List<TodoItem> visible) {
     final map = <String, List<TodoItem>>{};
     for (final t in visible) {
       final k = '${t.urgency}_${t.importance}';
@@ -367,8 +364,8 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
     bool ultraCompact = false,
   }) {
     if (ultraCompact) {
-      final pad = math.max(2.0,
-              math.min(5.0, math.max(height, width) * 0.07))
+      final pad = math
+          .max(2.0, math.min(5.0, math.max(height, width) * 0.07))
           .toDouble();
       final innerH = math.max(0.0, height - 2 * pad);
       final metaFs = math.max(
@@ -444,16 +441,17 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
     final pc = TodoEisenhowerBoard.priorityColor(item.priority);
     final fsTitle = (13 * textScale).clamp(9.5, 13).toDouble();
     final fsSmall = (10 * textScale).clamp(7.5, 10).toDouble();
-    final pad = math.min(
-      math.max(4.5, 9 * textScale),
-      math.max(3.5, height * 0.12),
-    ).toDouble();
+    final pad = math
+        .min(math.max(4.5, 9 * textScale), math.max(3.5, height * 0.12))
+        .toDouble();
     final innerH = math.max(0.0, height - 2 * pad);
-    final titleMaxLines =
-        innerH >= 62 ? 2 : innerH >= 42 ? (textScale >= 0.85 ? 2 : 1) : 1;
+    final titleMaxLines = innerH >= 62
+        ? 2
+        : innerH >= 42
+        ? (textScale >= 0.85 ? 2 : 1)
+        : 1;
     final showFullChips = innerH >= 34;
-    final chipAreaH =
-        math.max(14.0, math.min(innerH * 0.48, fsSmall + 18));
+    final chipAreaH = math.max(14.0, math.min(innerH * 0.48, fsSmall + 18));
 
     return Container(
       width: width,
@@ -504,10 +502,18 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                         spacing: math.max(2.0, 3 * textScale),
                         runSpacing: 3,
                         children: [
-                          _miniChip('긴:${item.urgency}', Colors.indigo.shade50,
-                              Colors.indigo.shade800, fsSmall),
-                          _miniChip('중:${item.importance}', Colors.teal.shade50,
-                              Colors.teal.shade800, fsSmall),
+                          _miniChip(
+                            '긴:${item.urgency}',
+                            Colors.indigo.shade50,
+                            Colors.indigo.shade800,
+                            fsSmall,
+                          ),
+                          _miniChip(
+                            '중:${item.importance}',
+                            Colors.teal.shade50,
+                            Colors.teal.shade800,
+                            fsSmall,
+                          ),
                           _miniChip(
                             item.priorityLabel,
                             pc.withOpacity(0.12),
@@ -560,8 +566,10 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
     top = top.clamp(0.0, math.max(0.0, plotH - h));
 
     final textScale = scale;
-    final ghostPad =
-        math.min(6.0, math.min(w, h) * 0.085).clamp(2.0, 8.0).toDouble();
+    final ghostPad = math
+        .min(6.0, math.min(w, h) * 0.085)
+        .clamp(2.0, 8.0)
+        .toDouble();
     final iw = math.max(1.0, w - 2 * ghostPad);
     final ih = math.max(1.0, h - 2 * ghostPad);
 
@@ -634,7 +642,7 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
     required double plotH,
     required List<TodoItem> visible,
     required Widget Function(TodoItem item, double w, double h, double scale)
-        wrapDraggable,
+    wrapDraggable,
   }) {
     final out = <Widget>[];
     final groups = _groupByScores(visible).entries.toList()
@@ -644,6 +652,7 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
           final hovered = dragging ? false : (key == _hoveredPileKey);
           return hovered ? 1 : 0;
         }
+
         return rank(a.key).compareTo(rank(b.key));
       });
 
@@ -696,12 +705,7 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
             height: slot.height,
             child: Transform.rotate(
               angle: slot.angle,
-              child: wrapDraggable(
-                item,
-                slot.width,
-                slot.height,
-                textScale,
-              ),
+              child: wrapDraggable(item, slot.width, slot.height, textScale),
             ),
           ),
         );
@@ -752,12 +756,8 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
             onEnter: n > 1 && _activeDragItem == null
                 ? (_) => _pilePointerEnter(entry.key)
                 : null,
-            onExit:
-                n > 1 ? (_) => _pilePointerExit() : null,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: pileChildren,
-            ),
+            onExit: n > 1 ? (_) => _pilePointerExit() : null,
+            child: Stack(clipBehavior: Clip.none, children: pileChildren),
           ),
         ),
       );
@@ -911,8 +911,11 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.arrow_upward,
-                                size: 16, color: Colors.grey.shade600),
+                            Icon(
+                              Icons.arrow_upward,
+                              size: 16,
+                              color: Colors.grey.shade600,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '중요도',
@@ -1058,7 +1061,9 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                                               subtitleColor:
                                                   Colors.orange.shade800,
                                               badge: _badgeCircle(
-                                                  '2', Colors.orange),
+                                                '2',
+                                                Colors.orange,
+                                              ),
                                             ),
                                           ),
                                           Expanded(
@@ -1069,7 +1074,9 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                                               subtitleColor:
                                                   Colors.blue.shade700,
                                               badge: _badgeCircle(
-                                                  '1', Colors.blue.shade700),
+                                                '1',
+                                                Colors.blue.shade700,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -1081,27 +1088,27 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                                           Expanded(
                                             child: _quadrant(
                                               bg: const Color(0xFFF5F5F5),
-                                              titleKo:
-                                                  '급하지도 중요하지도 않은 일',
+                                              titleKo: '급하지도 중요하지도 않은 일',
                                               subtitle: 'Delete',
                                               subtitleColor:
                                                   Colors.blueGrey.shade700,
                                               badge: _badgeCircle(
-                                                  '4',
-                                                  Colors.blueGrey.shade700),
+                                                '4',
+                                                Colors.blueGrey.shade700,
+                                              ),
                                             ),
                                           ),
                                           Expanded(
                                             child: _quadrant(
                                               bg: const Color(0xFFE8F5E9),
-                                              titleKo:
-                                                  '급하지만 중요하지 않은 일',
+                                              titleKo: '급하지만 중요하지 않은 일',
                                               subtitle: 'Delegate',
                                               subtitleColor:
                                                   Colors.green.shade800,
                                               badge: _badgeCircle(
-                                                  '3',
-                                                  Colors.green.shade700),
+                                                '3',
+                                                Colors.green.shade700,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -1131,11 +1138,12 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                                   onAcceptWithDetails: _onDrop,
                                   onMove:
                                       (DragTargetDetails<TodoItem> details) {
-                                    _updateDropPreviewFromDrag(details.offset);
-                                  },
+                                        _updateDropPreviewFromDrag(
+                                          details.offset,
+                                        );
+                                      },
                                   onLeave: (_) => _clearPreview(),
-                                  builder:
-                                      (context, candidateData, rejected) {
+                                  builder: (context, candidateData, rejected) {
                                     return const SizedBox.expand();
                                   },
                                 ),
@@ -1159,7 +1167,8 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                           }
 
                           final plotDragging = _activeDragItem != null;
-                          final overPlotHighlight = plotDragging &&
+                          final overPlotHighlight =
+                              plotDragging &&
                               _previewUrgency != null &&
                               _previewImportance != null;
 
@@ -1171,18 +1180,17 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                               border: Border.all(
                                 color: overPlotHighlight
                                     ? Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: 0.55)
+                                          .withValues(alpha: 0.55)
                                     : plotDragging
-                                        ? Theme.of(context).colorScheme.primary
-                                            .withValues(alpha: 0.28)
-                                        : Colors.grey.shade300,
-                                width:
-                                    plotDragging ? 2 : 1,
+                                    ? Theme.of(context).colorScheme.primary
+                                          .withValues(alpha: 0.28)
+                                    : Colors.grey.shade300,
+                                width: plotDragging ? 2 : 1,
                               ),
                               boxShadow: overPlotHighlight
                                   ? const [
                                       BoxShadow(
-                                        color: Color(0x1A6D28D9),
+                                        color: Color(0x1A7D8F24),
                                         blurRadius: 16,
                                         spreadRadius: 0,
                                         offset: Offset(0, 4),
@@ -1226,8 +1234,11 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                           color: Colors.grey.shade800,
                         ),
                       ),
-                      Icon(Icons.arrow_forward,
-                          size: 16, color: Colors.grey.shade600),
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 16,
+                        color: Colors.grey.shade600,
+                      ),
                     ],
                   ),
                 ),
