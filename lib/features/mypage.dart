@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/theme_provider.dart';
 import 'todo/tag_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'auth/auth_provider.dart';
 
@@ -14,12 +13,16 @@ class MyPageScreen extends ConsumerStatefulWidget {
 }
 
 class _MyPageScreenState extends ConsumerState<MyPageScreen> {
+  void _refreshProfile() {
+    if (ref.read(authProvider)) {
+      ref.read(userProfileProvider.notifier).load();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(userProfileProvider.notifier).load();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshProfile());
   }
 
   // 프로필 사진 변경 로직 (추후 image_picker 등 연동 필요)
@@ -114,64 +117,6 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('닫기', style: TextStyle(color: Colors.grey)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 닉네임 수정 다이얼로그
-  void _editNickname() {
-    final TextEditingController nicknameController = TextEditingController(
-      text: _nickname,
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          '닉네임 변경',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: nicknameController,
-          decoration: InputDecoration(
-            hintText: '새로운 닉네임을 입력하세요',
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              if (nicknameController.text.trim().isNotEmpty) {
-                setState(() {
-                  _nickname = nicknameController.text.trim();
-                });
-              }
-              Navigator.pop(context);
-            },
-            child: const Text(
-              '저장',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
           ),
         ],
       ),
@@ -288,8 +233,14 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   @override
   Widget build(BuildContext context) {
     final themeColor = Theme.of(context).colorScheme.primary;
+    ref.listen(authProvider, (previous, loggedIn) {
+      if (loggedIn && previous != loggedIn) {
+        _refreshProfile();
+      }
+    });
+
     final profile = ref.watch(userProfileProvider);
-    final displayName = profile?.realName ?? '사용자';
+    final displayName = profile?.displayName ?? '사용자';
     final email = profile?.email ?? '';
     final department = profile?.department ?? '';
     final username = profile?.username ?? '';
