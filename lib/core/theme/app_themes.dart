@@ -17,27 +17,34 @@ class AppThemes {
 
   /// BusanBada 폰트의 ascender 값이 커서 텍스트가 위로 뜨는 문제를
   /// leadingDistribution.even 으로 수직 여백을 균등 배분해 교정합니다.
-  static TextStyle _fix(TextStyle? s) => (s ?? const TextStyle()).copyWith(
-    fontFamily: 'NanumSquareNeo',
-    leadingDistribution: TextLeadingDistribution.even,
-  );
+  static TextStyle _fix(TextStyle? s, FontWeight weight) =>
+      (s ?? const TextStyle()).copyWith(
+        fontFamily: 'NanumSquareNeo',
+        fontWeight: weight,
+        leadingDistribution: TextLeadingDistribution.even,
+      );
 
   static TextTheme _fixedTextTheme(TextTheme base) => base.copyWith(
-    displayLarge: _fix(base.displayLarge),
-    displayMedium: _fix(base.displayMedium),
-    displaySmall: _fix(base.displaySmall),
-    headlineLarge: _fix(base.headlineLarge),
-    headlineMedium: _fix(base.headlineMedium),
-    headlineSmall: _fix(base.headlineSmall),
-    titleLarge: _fix(base.titleLarge),
-    titleMedium: _fix(base.titleMedium),
-    titleSmall: _fix(base.titleSmall),
-    bodyLarge: _fix(base.bodyLarge),
-    bodyMedium: _fix(base.bodyMedium),
-    bodySmall: _fix(base.bodySmall),
-    labelLarge: _fix(base.labelLarge),
-    labelMedium: _fix(base.labelMedium),
-    labelSmall: _fix(base.labelSmall),
+    // 큰 제목 계열 → ExtraBold (w800)
+    displayLarge: _fix(base.displayLarge, FontWeight.w800),
+    displayMedium: _fix(base.displayMedium, FontWeight.w800),
+    displaySmall: _fix(base.displaySmall, FontWeight.w800),
+    // 헤드라인 계열 → Bold (w700)
+    headlineLarge: _fix(base.headlineLarge, FontWeight.w700),
+    headlineMedium: _fix(base.headlineMedium, FontWeight.w700),
+    headlineSmall: _fix(base.headlineSmall, FontWeight.w700),
+    // 타이틀 계열 → w600 (500·600은 Flutter가 w700로 대체)
+    titleLarge: _fix(base.titleLarge, FontWeight.w600),
+    titleMedium: _fix(base.titleMedium, FontWeight.w600),
+    titleSmall: _fix(base.titleSmall, FontWeight.w600),
+    // 본문 계열 → Regular (w400)
+    bodyLarge: _fix(base.bodyLarge, FontWeight.w400),
+    bodyMedium: _fix(base.bodyMedium, FontWeight.w400),
+    bodySmall: _fix(base.bodySmall, FontWeight.w400),
+    // 레이블 계열 → w500·w600 (강조, Flutter가 가장 가까운 굵기로 대체)
+    labelLarge: _fix(base.labelLarge, FontWeight.w600),
+    labelMedium: _fix(base.labelMedium, FontWeight.w500),
+    labelSmall: _fix(base.labelSmall, FontWeight.w500),
   );
 
   static ThemeData _base({required ColorScheme colorScheme}) {

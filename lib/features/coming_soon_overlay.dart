@@ -76,10 +76,9 @@ class ComingSoonOverlay extends StatelessWidget {
                     Text(
                       title,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         color: colorScheme.onSurface,
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 10),

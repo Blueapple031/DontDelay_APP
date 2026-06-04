@@ -219,9 +219,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             children: [
                               Text(
                                 '회원가입',
-                                style: TextStyle(
+                                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                                   fontSize: 22,
-                                  fontWeight: FontWeight.bold,
                                   color: cs.onSurface,
                                 ),
                               ),
@@ -339,11 +338,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                     color: cs.onPrimary,
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   '가입하기',
-                                  style: TextStyle(
+                                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                         ),
