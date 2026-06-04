@@ -81,40 +81,7 @@ class RetrospectiveService {
   }
 
   List<RetrospectiveItem> _getDefaultRetrospectives() {
-    return [
-      RetrospectiveItem(
-        id: '1',
-        date: '2026-05-09',
-        emoji: '😊',
-        title: '알고리즘 과제 회고',
-        content: '오늘은 DP 문제를 집중적으로 풀었다. 처음엔 어려웠지만 점화식을 세우는 패턴이 보이기 시작했다. 지속적인 연습이 필요하다.',
-        tags: ['학습', '알고리즘', 'KPT'],
-      ),
-      RetrospectiveItem(
-        id: '2',
-        date: '2026-05-08',
-        emoji: '😐',
-        title: '운영체제 중간고사 대비 회고',
-        content: '시험이 2주 남았다. 3단원과 4단원이 약한 것 같아서 내일부터 집중적으로 복습해야겠다. 시간 배분을 잘하자.',
-        tags: ['계획', '운영체제', '회고'],
-      ),
-      RetrospectiveItem(
-        id: '3',
-        date: '2026-05-07',
-        emoji: '🤔',
-        title: '팀 프로젝트 1차 스프린트 회고',
-        content: '오늘 팀원들과 프로젝트 방향을 정했다. 내가 백엔드를 맡기로 했는데 Spring Boot 기초를 다져야 진행에 무리가 없을 것 같다.',
-        tags: ['프로젝트', '팀워크', '스프린트'],
-      ),
-      RetrospectiveItem(
-        id: '4',
-        date: '2026-05-06',
-        emoji: '🤩',
-        title: '주간 생산성 및 피드백 회고',
-        content: '오늘은 집중이 정말 잘 됐다! 할 일 목록의 80%를 완료했고, 운동도 병행했다. 매일 일일 피드백 루프를 돌리는 것이 유용하다.',
-        tags: ['생산성', '성취', '피드백'],
-      ),
-    ];
+    return [];
   }
 }
 
@@ -163,6 +130,102 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
     }).toList();
   }
 
+  Future<String?> _showEmojiPickerDialog(BuildContext context, Color themeColor) {
+    final categories = {
+      '표정': ['😊', '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '🥲', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😋', '😜', '🤪', '🤓', '😎', '🥳', '😏', '😒', '😞', '😔', '🥺', '😢', '😭', '😤', '😠', '😡', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤔', '🫣', '🤫', '🫡'],
+      '공부/업무': ['💻', '⌨️', '🖥️', '📓', '📕', '📗', '📘', '📙', '📚', '📖', '✍️', '📝', '✏️', '🎨', '🎭', '🎬', '🎧', '💼', '📅', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '🔑', '💡', '📢', '⏰', '🔋', '🏆', '🎖️', '🏅', '🥇'],
+      '일상/활동': ['⚽', '🏀', '⚾', '🎾', '🏐', '🏉', '🎱', '🏓', '🏸', '🥋', '🛹', '⛷️', '🏂', '🏋️', '🧘', '🚴', '🏃', '🚶', '🏊', '🏄', '🧗', '⛺', '🏖️', '✈️', '🚗', '🚇', '🍿', '☕', '🍵', '🍺', '🥤', '🍕', '🍔', '🍟', '🍜', '🍰', '🍎', '🍙'],
+      '사물/기호': ['🔥', '✨', '🌟', '⭐', '💫', '💥', '⚠️', '⚡', '💧', '💤', '💭', '💬', '🔔', '🎁', '🎈', '🎉', '🧸', '🔮', '🧿', '🍀', '🌸', '🌹', '🌈', '☀️', '☁️', '❄️', '☂️', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💖', '💔']
+    };
+
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return DefaultTabController(
+          length: categories.length,
+          child: Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: Colors.white,
+            elevation: 8,
+            child: Container(
+              width: 360,
+              height: 400,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '이모지 선택',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () => Navigator.pop(ctx),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TabBar(
+                    labelColor: themeColor,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: themeColor,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
+                    tabs: categories.keys.map((name) => Tab(text: name)).toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: TabBarView(
+                      children: categories.values.map((emojiList) {
+                        return GridView.builder(
+                          padding: const EdgeInsets.only(top: 8),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 6,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                          itemCount: emojiList.length,
+                          itemBuilder: (context, idx) {
+                            final emoji = emojiList[idx];
+                            return InkWell(
+                              onTap: () => Navigator.pop(ctx, emoji),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.grey.shade50,
+                                  border: Border.all(color: Colors.grey.shade100),
+                                ),
+                                child: Text(
+                                  emoji,
+                                  style: const TextStyle(fontSize: 22),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showAddRetrospectiveDialog(Color themeColor, Color themeColorLight) async {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
@@ -171,26 +234,120 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
     final now = DateTime.now();
     final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
-    final List<String> emojis = ['😊', '😐', '🤔', '🤩', '😢', '🔥', '💻', '💪'];
-
     final result = await showDialog<RetrospectiveItem?>(
       context: context,
+      barrierDismissible: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Text('새 회고 작성', style: TextStyle(fontWeight: FontWeight.bold)),
-              content: SizedBox(
-                width: 480,
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              elevation: 8,
+              backgroundColor: Colors.white,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 520),
+                padding: const EdgeInsets.all(32),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Emoji 선택
+                      // 다이얼로그 헤더
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '새 회고 작성',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$dateStr · 오늘의 성장 기록',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close, color: Colors.grey.shade400),
+                            onPressed: () => Navigator.pop(ctx, null),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // 이모지 선택 섹션
                       const Text(
-                        '오늘의 감정/상태',
+                        '오늘 하루를 나타내는 이모지',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              selectedEmoji,
+                              style: const TextStyle(fontSize: 28),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              '오늘의 분위기',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const Spacer(),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final chosenEmoji = await _showEmojiPickerDialog(context, themeColor);
+                                if (chosenEmoji != null) {
+                                  setDialogState(() {
+                                    selectedEmoji = chosenEmoji;
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+                              label: const Text('변경'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: themeColorLight,
+                                foregroundColor: themeColor,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // 제목 입력 필드
+                      const Text(
+                        '제목',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -198,110 +355,166 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: emojis.map((emoji) {
-                          final isSelected = selectedEmoji == emoji;
-                          return GestureDetector(
-                            onTap: () {
-                              setDialogState(() {
-                                selectedEmoji = emoji;
-                              });
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: isSelected ? themeColorLight : Colors.transparent,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected ? themeColor : Colors.transparent,
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Text(emoji, style: const TextStyle(fontSize: 20)),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 20),
-                      // 제목
                       TextField(
                         controller: titleController,
-                        decoration: const InputDecoration(
-                          labelText: '제목',
-                          hintText: '오늘의 회고 제목을 입력하세요',
-                          border: OutlineInputBorder(),
+                        style: const TextStyle(fontSize: 15),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: themeColor, width: 1.5),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // 내용
+                      const SizedBox(height: 20),
+
+                      // 내용 입력 필드
+                      const Text(
+                        '회고 내용',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       TextField(
                         controller: contentController,
-                        maxLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: '회고 내용',
-                          hintText: '오늘 무엇을 배웠고, 무엇이 부족했는지 기록해 보세요',
-                          border: OutlineInputBorder(),
+                        maxLines: 5,
+                        style: const TextStyle(fontSize: 15, height: 1.4),
+                        decoration: InputDecoration(
+                          hintText: '오늘 달성한 점, 아쉬운 점, 그리고 내일 개선할 점(KPT)을 자유롭게 기록해 보세요.',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.all(16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: themeColor, width: 1.5),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // 태그
+                      const SizedBox(height: 20),
+
+                      // 태그 입력 필드
+                      const Text(
+                        '태그 (쉼표로 구분)',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       TextField(
                         controller: tagsController,
-                        decoration: const InputDecoration(
-                          labelText: '태그 (쉼표로 구분)',
-                          hintText: '예: 학습, 알고리즘, KPT',
-                          border: OutlineInputBorder(),
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: '예: 학습, 복습',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          prefixIcon: Icon(Icons.local_offer_outlined, size: 18, color: Colors.grey.shade400),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: themeColor, width: 1.5),
+                          ),
                         ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // 버튼 액션
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          OutlinedButton(
+                            onPressed: () => Navigator.pop(ctx, null),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.grey.shade300),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            ),
+                            child: Text(
+                              '취소',
+                              style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () {
+                              final title = titleController.text.trim();
+                              final content = contentController.text.trim();
+                              if (title.isEmpty || content.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('제목과 내용을 모두 입력해 주세요.')),
+                                );
+                                return;
+                              }
+                              final tagsRaw = tagsController.text.trim();
+                              final tags = tagsRaw.isEmpty
+                                  ? <String>[]
+                                  : tagsRaw
+                                      .split(',')
+                                      .map((t) => t.trim())
+                                      .where((t) => t.isNotEmpty)
+                                      .toList();
+
+                              Navigator.pop(
+                                ctx,
+                                RetrospectiveItem(
+                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                  date: dateStr,
+                                  emoji: selectedEmoji,
+                                  title: title,
+                                  content: content,
+                                  tags: tags,
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: themeColor,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              '회고 저장',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, null),
-                  child: Text('취소', style: TextStyle(color: Colors.grey.shade600)),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final title = titleController.text.trim();
-                    final content = contentController.text.trim();
-                    if (title.isEmpty || content.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('제목과 내용을 모두 입력해 주세요.')),
-                      );
-                      return;
-                    }
-                    final tagsRaw = tagsController.text.trim();
-                    final tags = tagsRaw.isEmpty
-                        ? <String>[]
-                        : tagsRaw
-                            .split(',')
-                            .map((t) => t.trim())
-                            .where((t) => t.isNotEmpty)
-                            .toList();
-
-                    Navigator.pop(
-                      ctx,
-                      RetrospectiveItem(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        date: dateStr,
-                        emoji: selectedEmoji,
-                        title: title,
-                        content: content,
-                        tags: tags,
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: themeColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('저장', style: TextStyle(color: Colors.white)),
-                ),
-              ],
             );
           },
         );
@@ -314,6 +527,177 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
       });
       _service.saveRetrospectives(_retrospectives);
     }
+  }
+
+  // 회고 상세 보기 다이얼로그
+  void _showRetrospectiveDetailDialog(RetrospectiveItem retro, Color tagBg, Color tagText) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          elevation: 8,
+          backgroundColor: Colors.white,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 500),
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 상단 헤더: 닫기 아이콘
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.close, color: Colors.grey.shade400),
+                      onPressed: () => Navigator.pop(context),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // 이모지와 제목 영역 (제목 아래 날짜 표시)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey.shade100),
+                      ),
+                      child: Text(
+                        retro.emoji,
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text(
+                            retro.title,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            retro.date,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                const Divider(height: 1),
+                const SizedBox(height: 24),
+
+                // 본문 내용 영역
+                const Text(
+                  '오늘의 기록',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(maxHeight: 240),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade100),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      retro.content,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black87,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // 태그 영역
+                if (retro.tags.isNotEmpty) ...[
+                  const Text(
+                    '태그',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: retro.tags.map((tag) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: tagBg,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          tag,
+                          style: TextStyle(
+                            color: tagText,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+
+                // 하단 닫기 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      '확인',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _confirmDeleteRetrospective(RetrospectiveItem retro) {
@@ -458,109 +842,129 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
     Color tagText,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // 1. Emoji & Date
-          SizedBox(
-            width: 100,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showRetrospectiveDetailDialog(retrospective, tagBg, tagText),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(retrospective.emoji, style: const TextStyle(fontSize: 24)),
-                const SizedBox(width: 12),
+                // 1. Emoji & Date
+                SizedBox(
+                  width: 130,
+                  child: Row(
+                    children: [
+                      Text(retrospective.emoji, style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          retrospective.date,
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          softWrap: false,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // 수직 구분선
+                Container(
+                  height: 32,
+                  width: 1,
+                  color: Colors.grey.shade200,
+                ),
+                const SizedBox(width: 20),
+                // 2. 제목 & 내용
                 Expanded(
-                  child: Text(
-                    retrospective.date,
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        retrospective.title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        retrospective.content,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
+                ),
+                const SizedBox(width: 20),
+                // 3. 태그들
+                if (retrospective.tags.isNotEmpty)
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: retrospective.tags.map((tag) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: tagBg,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          tag,
+                          style: TextStyle(
+                            color: tagText,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                const SizedBox(width: 16),
+                // 4. 삭제 버튼
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  style: ButtonStyle(
+                    foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(WidgetState.hovered)) {
+                        return Colors.redAccent;
+                      }
+                      return Colors.grey.shade400;
+                    }),
+                    overlayColor: WidgetStateProperty.all(Colors.red.withValues(alpha: 0.05)),
+                  ),
+                  onPressed: () => _confirmDeleteRetrospective(retrospective),
+                  tooltip: '회고 삭제',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 16),
-          // 수직 구분선
-          Container(
-            height: 32,
-            width: 1,
-            color: Colors.grey.shade200,
-          ),
-          const SizedBox(width: 20),
-          // 2. 제목 & 내용
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  retrospective.title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  retrospective.content,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 13,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 20),
-          // 3. 태그들
-          if (retrospective.tags.isNotEmpty)
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: retrospective.tags.map((tag) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tagBg,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    tag,
-                    style: TextStyle(
-                      color: tagText,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          const SizedBox(width: 16),
-          // 4. 삭제 버튼
-          IconButton(
-            icon: Icon(Icons.delete_outline, size: 18, color: Colors.grey.shade400),
-            onPressed: () => _confirmDeleteRetrospective(retrospective),
-            tooltip: '회고 삭제',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-        ],
+        ),
       ),
     );
   }

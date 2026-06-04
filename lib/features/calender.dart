@@ -20,6 +20,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   _CalViewMode _viewMode = _CalViewMode.month;
   late DateTime _focusedDate;
   late final DateTime _today;
+  bool _isDragging = false;
 
   Color get _kPurple => Theme.of(context).colorScheme.primary;
   Color get _kPurpleLight => Theme.of(context).colorScheme.primaryContainer;
@@ -109,20 +110,87 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
       data: (raw) {
         final todos = _validTodos(raw);
-        return Padding(
-          padding: const EdgeInsets.all(40.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              Expanded(
-                child: _viewMode == _CalViewMode.month
-                    ? _buildMonthView(todos, tagMap)
-                    : _buildSevenDaysView(todos, tagMap),
+        return Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(40.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: _viewMode == _CalViewMode.month
+                        ? _buildMonthView(todos, tagMap)
+                        : _buildSevenDaysView(todos, tagMap),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            if (_isDragging)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 30,
+                child: Center(
+                  child: DragTarget<TodoItem>(
+                    onWillAcceptWithDetails: (_) => true,
+                    onAcceptWithDetails: (details) async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await ref
+                            .read(todoListProvider.notifier)
+                            .deleteTodo(details.data.id);
+                        messenger.showSnackBar(
+                          const SnackBar(content: Text('일정이 삭제되었습니다.')),
+                        );
+                      } catch (e) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('삭제에 실패했습니다: $e')),
+                        );
+                      }
+                    },
+                    builder: (context, candidateData, rejectedData) {
+                      final isOver = candidateData.isNotEmpty;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: isOver ? 64 : 56,
+                        height: isOver ? 64 : 56,
+                        decoration: BoxDecoration(
+                          color: isOver ? Colors.red.shade50 : Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isOver
+                                ? Colors.red.shade400
+                                : Colors.grey.shade300,
+                            width: isOver ? 2.0 : 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isOver
+                                  ? Colors.red.withValues(alpha: 0.15)
+                                  : Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Icon(
+                          isOver
+                              ? Icons.delete_forever
+                              : Icons.delete_outline,
+                          color: isOver
+                              ? Colors.red.shade600
+                              : Colors.grey.shade600,
+                          size: isOver ? 26 : 22,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+          ],
         );
       },
     );
@@ -481,6 +549,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       cursor: SystemMouseCursors.grab,
       child: Draggable<TodoItem>(
         data: todo,
+        onDragStarted: () => setState(() => _isDragging = true),
+        onDragEnd: (_) => setState(() => _isDragging = false),
+        onDraggableCanceled: (_, __) => setState(() => _isDragging = false),
         feedback: Material(
           elevation: 4,
           borderRadius: BorderRadius.circular(6),
@@ -879,6 +950,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       cursor: SystemMouseCursors.grab,
       child: Draggable<TodoItem>(
         data: todo,
+        onDragStarted: () => setState(() => _isDragging = true),
+        onDragEnd: (_) => setState(() => _isDragging = false),
+        onDraggableCanceled: (_, __) => setState(() => _isDragging = false),
         feedback: Material(
           elevation: 8,
           borderRadius: BorderRadius.circular(10),
