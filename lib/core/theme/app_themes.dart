@@ -17,27 +17,29 @@ class AppThemes {
 
   /// BusanBada 폰트의 ascender 값이 커서 텍스트가 위로 뜨는 문제를
   /// leadingDistribution.even 으로 수직 여백을 균등 배분해 교정합니다.
-  static TextStyle _fix(TextStyle? s) => (s ?? const TextStyle()).copyWith(
-    fontFamily: 'NanumSquareNeo',
-    leadingDistribution: TextLeadingDistribution.even,
-  );
+  static TextStyle _fix(TextStyle? s, {FontWeight? fontWeight}) =>
+      (s ?? const TextStyle()).copyWith(
+        fontFamily: 'NanumSquareNeo',
+        fontWeight: fontWeight,
+        leadingDistribution: TextLeadingDistribution.even,
+      );
 
   static TextTheme _fixedTextTheme(TextTheme base) => base.copyWith(
-    displayLarge: _fix(base.displayLarge),
-    displayMedium: _fix(base.displayMedium),
-    displaySmall: _fix(base.displaySmall),
-    headlineLarge: _fix(base.headlineLarge),
-    headlineMedium: _fix(base.headlineMedium),
-    headlineSmall: _fix(base.headlineSmall),
-    titleLarge: _fix(base.titleLarge),
-    titleMedium: _fix(base.titleMedium),
-    titleSmall: _fix(base.titleSmall),
-    bodyLarge: _fix(base.bodyLarge),
-    bodyMedium: _fix(base.bodyMedium),
-    bodySmall: _fix(base.bodySmall),
-    labelLarge: _fix(base.labelLarge),
-    labelMedium: _fix(base.labelMedium),
-    labelSmall: _fix(base.labelSmall),
+    displayLarge: _fix(base.displayLarge, fontWeight: FontWeight.w800),
+    displayMedium: _fix(base.displayMedium, fontWeight: FontWeight.w800),
+    displaySmall: _fix(base.displaySmall, fontWeight: FontWeight.w800),
+    headlineLarge: _fix(base.headlineLarge, fontWeight: FontWeight.w700),
+    headlineMedium: _fix(base.headlineMedium, fontWeight: FontWeight.w700),
+    headlineSmall: _fix(base.headlineSmall, fontWeight: FontWeight.w700),
+    titleLarge: _fix(base.titleLarge, fontWeight: FontWeight.w700),
+    titleMedium: _fix(base.titleMedium, fontWeight: FontWeight.w700),
+    titleSmall: _fix(base.titleSmall, fontWeight: FontWeight.w700),
+    bodyLarge: _fix(base.bodyLarge, fontWeight: FontWeight.w500),
+    bodyMedium: _fix(base.bodyMedium, fontWeight: FontWeight.w500),
+    bodySmall: _fix(base.bodySmall, fontWeight: FontWeight.w500),
+    labelLarge: _fix(base.labelLarge, fontWeight: FontWeight.w600),
+    labelMedium: _fix(base.labelMedium, fontWeight: FontWeight.w600),
+    labelSmall: _fix(base.labelSmall, fontWeight: FontWeight.w600),
   );
 
   static ThemeData _base({required ColorScheme colorScheme}) {

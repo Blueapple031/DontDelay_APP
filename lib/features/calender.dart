@@ -212,11 +212,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   horizontal: 14, vertical: 10),
               foregroundColor: Colors.black87,
             ),
-            child: const Text(
+            child: Text(
               'TODAY',
-              style: TextStyle(
+              style: Theme.of(context).textTheme.labelMedium!.copyWith(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
               ),
             ),
@@ -236,8 +235,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         const SizedBox(width: 6),
         Text(
           _headerLabel(),
-          style: const TextStyle(
-              fontSize: 22, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: 22),
         ),
         const Spacer(),
         SegmentedButton<_CalViewMode>(
@@ -305,9 +303,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     alignment: Alignment.center,
                     child: Text(
                       d,
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.labelSmall!.copyWith(
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
                         color: Colors.grey.shade500,
                         letterSpacing: 0.5,
                       ),
@@ -414,18 +411,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 alignment: Alignment.center,
                                 child: Text(
                                   '${date.day}',
-                                  style: const TextStyle(
+                                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                   ),
                                 ),
                               )
                             : Text(
                                 '${date.day}',
-                                style: TextStyle(
+                                style: Theme.of(context).textTheme.labelMedium!.copyWith(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w500,
                                   color: inMonth
                                       ? Colors.black87
                                       : Colors.grey.shade400,
@@ -449,10 +444,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               6, 1, 6, 2),
                           child: Text(
                             '+${todos.length - 2} more',
-                            style: TextStyle(
+                            style: Theme.of(context).textTheme.labelSmall!.copyWith(
                               fontSize: 10,
                               color: Colors.grey.shade500,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -597,8 +591,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
         title: Text(label,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 16)),
+            style: Theme.of(ctx).textTheme.titleMedium!.copyWith(fontSize: 16)),
         content: SizedBox(
           width: 320,
           child: Column(
@@ -728,9 +721,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.titleSmall!.copyWith(
                       fontSize: 15,
-                      fontWeight: FontWeight.bold,
                       color: isToday ? _kPurple : Colors.black87,
                     ),
                   ),
@@ -884,19 +876,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     if (tag.name.isNotEmpty)
                       Text(
                         tag.name,
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
                           fontSize: 10,
                           color: color.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     Text(
                       todo.title,
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 13,
-                        fontWeight: FontWeight.w500,
                         color: isDone
                             ? Colors.grey.shade400
                             : Colors.black87,

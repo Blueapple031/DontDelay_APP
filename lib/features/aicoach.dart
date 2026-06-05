@@ -25,12 +25,9 @@ class AiCoachScreen extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'AI 코치',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineLarge!.copyWith(fontSize: 28),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -262,7 +259,7 @@ class AiCoachScreen extends StatelessWidget {
                           recommendations.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         ...recommendations.map(
-                          (rec) => _buildRecommendationCard(rec),
+                          (rec) => _buildRecommendationCard(context, rec),
                         ),
                       ],
                     ],
@@ -283,7 +280,7 @@ class AiCoachScreen extends StatelessWidget {
   }
 
   // AI 추천 할 일 카드
-  Widget _buildRecommendationCard(Map<String, dynamic> item) {
+  Widget _buildRecommendationCard(BuildContext context, Map<String, dynamic> item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -300,10 +297,7 @@ class AiCoachScreen extends StatelessWidget {
               children: [
                 Text(
                   item['title'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall!.copyWith(fontSize: 15),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -324,10 +318,9 @@ class AiCoachScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Text(
                       item['tag'],
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
                         color: item['tagColor'],
                         fontSize: 13,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],

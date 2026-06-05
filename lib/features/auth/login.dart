@@ -104,9 +104,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       // Title
                       Text(
                         'DontDelay',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.headlineLarge!.copyWith(
                           fontSize: 28,
-                          fontWeight: FontWeight.bold,
                           color: cs.onSurface,
                         ),
                         textAlign: TextAlign.center,
@@ -159,11 +158,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     color: cs.onPrimary,
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   '로그인',
-                                  style: TextStyle(
+                                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                         ),
@@ -182,9 +180,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 const TextSpan(text: '아직 계정이 없으신가요?  '),
                                 TextSpan(
                                   text: '회원가입',
-                                  style: TextStyle(
+                                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
                                     color: cs.primary,
-                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],

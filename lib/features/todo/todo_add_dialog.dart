@@ -87,7 +87,7 @@ class _TodoDialogState extends ConsumerState<_TodoDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
         _isEdit ? '할 일 수정' : '새 할 일 추가',
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 20),
       ),
       content: SizedBox(
         width: 440,
@@ -158,9 +158,9 @@ class _TodoDialogState extends ConsumerState<_TodoDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   '태그',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 14),
                 ),
                 TextButton.icon(
                   onPressed: _openTagEditDialog,
@@ -248,9 +248,8 @@ class _TodoDialogState extends ConsumerState<_TodoDialog> {
                 ),
                 child: Text(
                   _isEdit ? '저장' : '추가',
-                  style: const TextStyle(
+                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -424,9 +423,9 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text(
+      title: Text(
         '태그 편집',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 18),
       ),
       content: SizedBox(
         width: 380,

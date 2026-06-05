@@ -43,9 +43,9 @@ class MainLayout extends ConsumerWidget {
                     padding: const EdgeInsets.all(24.0),
                     child: Text(
                       'DontDelay',
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.headlineLarge!.copyWith(
                         fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
                         color: cs.onSurface,
                       ),
                     ),
@@ -86,13 +86,11 @@ class MainLayout extends ConsumerWidget {
                             ),
                             title: Text(
                               item['title'] as String,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? selectedColor
-                                    : cs.onSurface,
+                              style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                                color: isSelected ? selectedColor : cs.onSurface,
                                 fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
                                 fontSize: 14,
                               ),
                             ),

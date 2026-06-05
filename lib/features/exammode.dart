@@ -37,12 +37,9 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                           size: 28,
                         ),
                         const SizedBox(width: 12),
-                        const Text(
+                        Text(
                           '시험기간 모드',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.headlineLarge!.copyWith(fontSize: 28),
                         ),
                       ],
                     ),
@@ -65,18 +62,17 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                     border: Border.all(color: const Color(0xFFF87171)),
                   ),
                   child: Row(
-                    children: const [
-                      Icon(
+                    children: [
+                      const Icon(
                         Icons.do_not_disturb_on,
                         color: Color(0xFFDC2626),
                         size: 16,
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         '방해금지 켜짐',
-                        style: TextStyle(
-                          color: Color(0xFFDC2626),
-                          fontWeight: FontWeight.bold,
+                        style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                          color: const Color(0xFFDC2626),
                           fontSize: 13,
                         ),
                       ),
@@ -117,11 +113,10 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
+                          Text(
                             '집중 시간',
-                            style: TextStyle(
+                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
@@ -145,9 +140,8 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                                 children: [
                                   Text(
                                     '25:00',
-                                    style: TextStyle(
+                                    style: Theme.of(context).textTheme.displayLarge!.copyWith(
                                       fontSize: 56,
-                                      fontWeight: FontWeight.bold,
                                       color: _isTimerRunning
                                           ? colorScheme.primary
                                           : Colors.black87,
@@ -204,10 +198,9 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                                 ),
                                 child: Text(
                                   _isTimerRunning ? '일시정지' : '집중 시작',
-                                  style: const TextStyle(
+                                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                     color: Colors.white,
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -248,18 +241,14 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 '오늘의 필수 목표',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context).textTheme.titleLarge!.copyWith(fontSize: 18),
                               ),
                               Text(
                                 '1/3 완료',
-                                style: TextStyle(
+                                style: Theme.of(context).textTheme.labelLarge!.copyWith(
                                   color: Colors.grey.shade500,
-                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
@@ -328,17 +317,15 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: Theme.of(context).textTheme.titleSmall!.copyWith(
                 fontSize: 15,
-                fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
             ),
             Text(
               dDay,
-              style: TextStyle(
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
@@ -378,9 +365,8 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     fontSize: 15,
-                    fontWeight: FontWeight.w500,
                     color: isCompleted ? Colors.grey.shade500 : Colors.black87,
                     decoration: isCompleted ? TextDecoration.lineThrough : null,
                   ),
@@ -397,10 +383,9 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
                   ),
                   child: Text(
                     subject,
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
                       color: Colors.grey.shade600,
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
