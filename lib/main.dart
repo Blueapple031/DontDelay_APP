@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'core/router.dart';
+import 'core/api_client.dart';
 import 'core/theme/app_themes.dart';
 import 'core/theme/theme_provider.dart';
 import 'features/keepurl/url_api_server.dart';
@@ -27,7 +28,10 @@ void main() async {
     await windowManager.focus();
   });
 
-  final container = ProviderContainer();
+  final cookieJar = await createPersistCookieJar();
+  final container = ProviderContainer(
+    overrides: [cookieJarProvider.overrideWithValue(cookieJar)],
+  );
   final connectionService = UrlConnectionService();
   final apiServer = UrlApiServer(
     connectionService: connectionService,
@@ -62,7 +66,7 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       title: 'DontDelay',
       theme: AppThemes.getTheme(themeType),
-      routerConfig: appRouter,
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }

@@ -236,7 +236,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             onPressed: () {
               ref.read(authProvider.notifier).logout();
               Navigator.pop(context);
-              context.go('/login');
+              context.go('/dashboard');
             },
             child: const Text(
               '로그아웃',
@@ -261,10 +261,11 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     });
 
     final profile = ref.watch(userProfileProvider);
-    final displayName = profile?.displayName ?? '사용자';
+    final realName = profile?.realName ?? '';
+    final username = profile?.username ?? '';
     final email = profile?.email ?? '';
     final department = profile?.department ?? '';
-    final username = profile?.username ?? '';
+    final major = profile?.major ?? '';
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -335,41 +336,34 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                             const SizedBox(height: 24),
 
                             Text(
-                              displayName,
+                              realName.isNotEmpty ? realName : '실명 미등록',
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (email.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                email,
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                            if (department.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                department,
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
                             if (username.isNotEmpty) ...[
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 8),
                               Text(
                                 '@$username',
                                 style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
                                 ),
                               ),
+                            ],
+                            if (email.isNotEmpty ||
+                                department.isNotEmpty ||
+                                major.isNotEmpty) ...[
+                              const SizedBox(height: 20),
+                              const Divider(),
+                              const SizedBox(height: 16),
+                              if (email.isNotEmpty)
+                                _buildProfileInfoRow('이메일', email),
+                              if (department.isNotEmpty)
+                                _buildProfileInfoRow('학과', department),
+                              if (major.isNotEmpty)
+                                _buildProfileInfoRow('전공', major),
                             ],
                           ],
                         ),
@@ -418,6 +412,37 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildProfileInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 56,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

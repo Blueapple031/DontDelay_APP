@@ -1,14 +1,22 @@
-# API 명세
+# API 명세 (요약)
 
-Base URL: `http://dontdelay.duckdns.org:8080`
+전체 연동 가이드: [`FRONTEND_INTEGRATION_GUIDE.md`](FRONTEND_INTEGRATION_GUIDE.md)
 
-인증은 Spring Security 세션 쿠키를 사용합니다.
+Base URL: `http://dontdelay.duckdns.org:8080` (로컬: `http://localhost:8080`)
+
+인증: Spring Security **세션 쿠키** (`JSESSIONID`). JWT 없음.
+
+## Health
+
+`GET /api/health` — 인증 불필요
+
+```json
+{ "status": "UP", "timestamp": "2026-06-06T20:00:00" }
+```
 
 ## POST /api/auth/signup
 
-회원가입.
-
-### 요청 본문
+인증 불필요.
 
 ```json
 {
@@ -20,36 +28,41 @@ Base URL: `http://dontdelay.duckdns.org:8080`
 }
 ```
 
-| 필드 | 설명 |
-|------|------|
-| `username` | 아이디 (필수) |
-| `password` | 비밀번호 (필수) |
-| `realName` | 실명 (필수) |
-| `email` | 이메일 (필수, 형식 검증, DB 고유값) |
-| `department` | 학과 (필수) |
-
-### 응답
-
-- `200`: 가입 성공
-- `400`: 필수값·이메일 형식 검증 실패, 사용자명 중복(`이미 존재하는 사용자명입니다.`), 이메일 중복(`이미 등록된 이메일입니다.`)
+- `200`: `{ "message": "회원가입 성공" }`
+- `400`: 사용자명/이메일 중복 등
 
 ## POST /api/auth/login
 
-로그인. 성공 시 세션 쿠키 발급.
+인증 불필요.
+
+```json
+{ "username": "testuser", "password": "mypassword123" }
+```
+
+- `200`: 프로필 + `Set-Cookie: JSESSIONID`
+- `401`: `{ "error": "INVALID_CREDENTIALS", "message": "..." }`
 
 ## GET /api/auth/me
 
-로그인한 사용자 프로필 조회.
-
-### 응답 예시 (200)
+세션 쿠키 필요.
 
 ```json
 {
   "username": "testuser",
   "realName": "홍길동",
   "email": "hong@example.com",
-  "department": "컴퓨터공학과"
+  "department": "컴퓨터공학과",
+  "major": "컴퓨터공학과"
 }
 ```
 
-- `401`: 미로그인, 또는 세션은 있으나 DB에 사용자가 없는 경우
+- `401`: `{ "error": "UNAUTHORIZED", "message": "로그인이 필요합니다." }`
+
+## 트러블슈팅
+
+| 증상 | 확인 |
+|------|------|
+| 로그인 401 + `로그인이 필요합니다` | `/api/auth/**` permitAll 설정 |
+| 로그인 401 + `INVALID_CREDENTIALS` | 아이디·비밀번호 확인 |
+| 연결 불가 | `GET /api/health` → `status: UP` |
+| 로그인 후 /me 401 | `PersistCookieJar` + 동일 CookieJar 사용 |

@@ -4,41 +4,25 @@ class UserProfile {
     required this.realName,
     required this.email,
     required this.department,
+    required this.major,
   });
 
   final String username;
   final String realName;
   final String email;
   final String department;
+  final String major;
 
-  String get displayName {
-    if (realName.trim().isNotEmpty) return realName.trim();
-    if (username.trim().isNotEmpty) return username.trim();
-    return '사용자';
-  }
-
-  /// API 응답(camelCase / snake_case / 래핑 객체)을 프로필로 변환. 실패 시 null.
   static UserProfile? tryParse(dynamic raw) {
     final map = _unwrapUserMap(raw);
     if (map == null) return null;
 
     return UserProfile(
-      username: _string(map, const ['username', 'userName', 'user_name']),
-      realName: _string(map, const [
-        'realName',
-        'real_name',
-        'name',
-        'fullName',
-        'full_name',
-        'nickname',
-        'nick_name',
-      ]),
+      username: _string(map, const ['username']),
+      realName: _string(map, const ['realName', 'real_name']),
       email: _string(map, const ['email']),
-      department: _string(map, const [
-        'department',
-        'major',
-        'dept',
-      ]),
+      department: _string(map, const ['department', 'dept']),
+      major: _string(map, const ['major']),
     );
   }
 

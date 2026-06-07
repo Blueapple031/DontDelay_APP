@@ -28,15 +28,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
-    final isSuccess = await ref.read(authProvider.notifier).login(username, password);
+    final errorMessage = await ref.read(authProvider.notifier).login(
+          username,
+          password,
+        );
     setState(() => _isLoading = false);
-    if (isSuccess && mounted) {
+    if (!mounted) return;
+
+    if (errorMessage == null) {
       context.go('/dashboard');
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('아이디 또는 비밀번호가 올바르지 않습니다.')),
-      );
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(errorMessage)),
+    );
   }
 
   @override
