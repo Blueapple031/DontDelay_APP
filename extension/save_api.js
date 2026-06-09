@@ -6,6 +6,17 @@ async function getSettings() {
   };
 }
 
+/** Chrome 웹 스토어: host_permissions에 :* 포트 와일드카드 불가 → 런타임 권한 요청 */
+async function ensureHostPermission(port) {
+  const origins = [
+    `http://127.0.0.1:${port}/*`,
+    `http://localhost:${port}/*`,
+  ];
+  const granted = await chrome.permissions.contains({ origins });
+  if (granted) return true;
+  return chrome.permissions.request({ origins });
+}
+
 function isSavableUrl(url) {
   const trimmed = (url || '').trim();
   if (!trimmed) return false;
@@ -27,6 +38,14 @@ async function saveUrlToDontDelay({ url, title, memo = '', source = 'extension' 
 
   if (!isSavableUrl(url)) {
     return { ok: false, message: '저장할 수 없는 URL 형식입니다.' };
+  }
+
+  const permitted = await ensureHostPermission(port);
+  if (!permitted) {
+    return {
+      ok: false,
+      message: '로컬 DontDelay 연결 권한이 필요합니다. 확장 팝업에서 허용해 주세요.',
+    };
   }
 
   try {

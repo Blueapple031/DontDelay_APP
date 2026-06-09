@@ -39,6 +39,11 @@ tokenInput.addEventListener('change', saveSettings);
 testBtn.addEventListener('click', async () => {
   await saveSettings();
   const port = Number(portInput.value) || 17823;
+  const permitted = await ensureHostPermission(port);
+  if (!permitted) {
+    showStatus('로컬 연결 권한을 허용해 주세요.', false);
+    return;
+  }
   try {
     const response = await fetch(`http://127.0.0.1:${port}/api/health`);
     if (response.ok) {
