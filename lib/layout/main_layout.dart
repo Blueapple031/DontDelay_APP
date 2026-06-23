@@ -29,11 +29,7 @@ class MainLayout extends ConsumerStatefulWidget {
   final Widget child;
   final String currentPath;
 
-  const MainLayout({
-    super.key,
-    required this.child,
-    required this.currentPath,
-  });
+  const MainLayout({super.key, required this.child, required this.currentPath});
 
   @override
   ConsumerState<MainLayout> createState() => _MainLayoutState();
@@ -43,18 +39,21 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   static const _menuItems = [
     {'title': '대시보드', 'icon': Icons.dashboard_outlined, 'path': '/dashboard'},
     {'title': '할 일', 'icon': Icons.check_box_outlined, 'path': '/todo'},
-    {'title': '캘린더', 'icon': Icons.calendar_today_outlined, 'path': '/calendar'},
+    {
+      'title': '캘린더',
+      'icon': Icons.calendar_today_outlined,
+      'path': '/calendar',
+    },
     {'title': 'URL 보관함', 'icon': Icons.bookmark_border, 'path': '/keepurl'},
-    {'title': '일기', 'icon': Icons.book_outlined, 'path': '/diary'},
+    {'title': '회고록', 'icon': Icons.book_outlined, 'path': '/retrospective'},
     {'title': '시험기간 모드', 'icon': Icons.school_outlined, 'path': '/exam_mode'},
     {'title': 'AI 코치', 'icon': Icons.smart_toy_outlined, 'path': '/ai_coach'},
     {'title': '마이페이지', 'icon': Icons.person_outline, 'path': '/mypage'},
   ];
 
   static const _themeSwatches = {
-    AppThemeType.grayscale: Color(0xFF8E8E8E),
-    AppThemeType.blue: Color(0xFF7A9AB8),
-    AppThemeType.greenTea: Color(0xFF7A9E80),
+    AppThemeType.classicGray: Color(0xFF6B7280),
+    AppThemeType.limeCoral: Color(0xFFC3DC68),
   };
 
   // ── 알람 상태 ──────────────────────────────────────────────────────
@@ -64,6 +63,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   bool _showNotificationPanel = false;
   int _unreadCount = 0;
   OverlayEntry? _alarmPopupEntry;
+
 
   @override
   void initState() {
@@ -189,8 +189,6 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   List<_AlarmNote> _buildAlarmNotes(List<TodoItem> todos) {
     final now = DateTime.now();
-    final todayKey =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final notes = <_AlarmNote>[];
 
     for (final task in todos) {
@@ -237,7 +235,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     final cs = Theme.of(context).colorScheme;
     final currentTheme = ref.watch(themeProvider).maybeWhen(
           data: (t) => t,
-          orElse: () => AppThemeType.grayscale,
+          orElse: () => AppThemeType.classicGray,
         );
     final todos = ref.watch(todoListProvider).maybeWhen(
           data: (list) => list,
@@ -419,8 +417,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           ),
 
           // 구분선
-          VerticalDivider(
-              thickness: 1, width: 1, color: cs.outlineVariant),
+          VerticalDivider(thickness: 1, width: 1, color: cs.outlineVariant),
 
           // ── 메인 컨텐츠 ──────────────────────────────────────────
           Expanded(

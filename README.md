@@ -55,7 +55,26 @@ flutter build windows
 ```
 
 생성 위치: `build\windows\x64\runner\Release\`  
-여기 있는 `dontdelay.exe`를 다른 PC로 복사해 실행할 수 있습니다(해당 PC에 **Visual C++ 재배포 패키지** 등이 필요할 수 있음).
+`dontdelay.exe`만내면 실행되지 않을 수 있습니다. **`Release` 폴더 전체**를 ZIP으로 보내거나, 아래 설치 프로그램을 사용하세요.
+
+### 설치 프로그램 만들기 (Inno Setup)
+
+1. [Inno Setup 6](https://jrsoftware.org/isdl.php) 설치
+2. 프로젝트 루트에서:
+
+```powershell
+flutter build windows
+.\installer\build_setup.ps1
+```
+
+> 명령어는 **`windows`** (복수)입니다. `flutter build window` 는 오타입니다.
+
+3. 생성 파일: `installer\output\DontDelay_Setup_1.0.0.exe`  
+   이 **setup.exe 하나**만 배포하면 됩니다.
+
+Inno Setup만 설치된 경우: 먼저 `flutter build windows` 실행 후 `installer\dontdelay.iss` 를 **Compile** 하세요.
+
+받는 PC에 **Visual C++ 재배포 패키지**가 없으면 실행 오류가 날 수 있습니다.
 
 ---
 

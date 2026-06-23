@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'auth_provider.dart';
+import 'auth_text_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -25,232 +26,175 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleLogin() async {
     setState(() => _isLoading = true);
-
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
-
-    final isSuccess = await ref.read(authProvider.notifier).login(username, password);
-
+    final errorMessage = await ref.read(authProvider.notifier).login(
+          username,
+          password,
+        );
     setState(() => _isLoading = false);
+    if (!mounted) return;
 
-    if (isSuccess && mounted) {
+    if (errorMessage == null) {
       context.go('/dashboard');
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('아이디 또는 비밀번호가 올바르지 않습니다.')),
-      );
+      return;
     }
-  }
 
-  /// 필드 위 라벨
-  Widget _buildLabel(BuildContext context, String text) {
-    final cs = Theme.of(context).colorScheme;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: cs.onSurface,
-        ),
-      ),
-    );
-  }
-
-  /// 공통 InputDecoration
-  InputDecoration _inputDecoration({
-    required ColorScheme cs,
-    required String hint,
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: cs.onSurfaceVariant.withOpacity(0.6)),
-      filled: true,
-      fillColor: cs.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.outline),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.outline),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.primary, width: 2),
-      ),
-      suffixIcon: suffixIcon,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(errorMessage)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
+      backgroundColor: cs.surface,
       body: Container(
-        // 테마 색상 기반 미묘한 그라디언트 배경
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              cs.primaryContainer,
-              cs.surface,
-              cs.secondaryContainer,
-            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
+            colors: [
+              cs.surface,
+              Color.alphaBlend(cs.primaryContainer.withOpacity(0.25), cs.surface),
+              cs.surface,
+            ],
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 440),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cs.shadow.withOpacity(0.08),
-                      blurRadius: 28,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ── 로고 아이콘 ──────────────────────────────
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        shape: BoxShape.circle,
+        child: Center(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: cs.outlineVariant),
+                    boxShadow: [
+                      BoxShadow(
+                        color: cs.shadow.withOpacity(0.07),
+                        blurRadius: 32,
+                        offset: const Offset(0, 8),
                       ),
-                      child: Icon(
-                        Icons.schedule_rounded,
-                        color: cs.primary,
-                        size: 36,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // ── 앱 타이틀 ────────────────────────────────
-                    Text(
-                      '안미룬이',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '오늘도 미루지 말고 시작해봐요',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-
-                    // ── 아이디 필드 ──────────────────────────────
-                    _buildLabel(context, '아이디'),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _usernameController,
-                      textInputAction: TextInputAction.next,
-                      decoration: _inputDecoration(
-                        cs: cs,
-                        hint: '아이디를 입력하세요',
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // ── 비밀번호 필드 ────────────────────────────
-                    _buildLabel(context, '비밀번호'),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _handleLogin(),
-                      decoration: _inputDecoration(
-                        cs: cs,
-                        hint: '비밀번호를 입력하세요',
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: cs.onSurfaceVariant,
-                            size: 20,
+                    ],
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 44),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [cs.primary, cs.primaryContainer],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          onPressed: () =>
-                              setState(() => _obscurePassword = !_obscurePassword),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // ── 로그인 버튼 ──────────────────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _isLoading ? null : _handleLogin,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          child: Icon(
+                            Icons.check_circle_rounded,
+                            size: 36,
+                            color: cs.onPrimary,
                           ),
                         ),
-                        child: _isLoading
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: cs.onPrimary,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'DontDelay',
+                        style: Theme.of(context).textTheme.headlineLarge!.copyWith(
+                          fontSize: 28,
+                          color: cs.onSurface,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '할 일을 미루지 말고 지금 시작하세요',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 36),
+                      AuthTextField(
+                        controller: _usernameController,
+                        label: '아이디',
+                        icon: Icons.person_outline_rounded,
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: 14),
+                      AuthTextField(
+                        controller: _passwordController,
+                        label: '비밀번호',
+                        icon: Icons.lock_outline_rounded,
+                        obscureText: _obscurePassword,
+                        onToggleObscure: () =>
+                            setState(() => _obscurePassword = !_obscurePassword),
+                        onSubmitted: (_) => _handleLogin(),
+                      ),
+                      const SizedBox(height: 28),
+                      SizedBox(
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: cs.primary,
+                            foregroundColor: cs.onPrimary,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: cs.onPrimary,
+                                  ),
+                                )
+                              : Text(
+                                  '로그인',
+                                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                    fontSize: 16,
+                                  ),
                                 ),
-                              )
-                            : const Text(
-                                '로그인',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // ── 회원가입 링크 ─────────────────────────────
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '아직 회원이 아니신가요?',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
                         ),
-                        const SizedBox(width: 4),
-                        GestureDetector(
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: GestureDetector(
                           onTap: () => context.push('/signup'),
-                          child: Text(
-                            '회원가입',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: cs.primary,
-                              fontWeight: FontWeight.bold,
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: cs.onSurfaceVariant,
+                              ),
+                              children: [
+                                const TextSpan(text: '아직 계정이 없으신가요?  '),
+                                TextSpan(
+                                  text: '회원가입',
+                                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                                    color: cs.primary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

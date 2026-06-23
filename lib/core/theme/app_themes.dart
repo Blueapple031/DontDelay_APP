@@ -8,9 +8,8 @@ class AppThemes {
 
   static ThemeData getTheme(AppThemeType type) {
     return switch (type) {
-      AppThemeType.grayscale => _grayscale,
-      AppThemeType.blue => _blue,
-      AppThemeType.greenTea => _greenTea,
+      AppThemeType.classicGray => _classicGray,
+      AppThemeType.limeCoral => _limeCoral,
     };
   }
 
@@ -18,27 +17,29 @@ class AppThemes {
 
   /// BusanBada 폰트의 ascender 값이 커서 텍스트가 위로 뜨는 문제를
   /// leadingDistribution.even 으로 수직 여백을 균등 배분해 교정합니다.
-  static TextStyle _fix(TextStyle? s) => (s ?? const TextStyle()).copyWith(
-    fontFamily: 'NanumSquareNeo',
-    leadingDistribution: TextLeadingDistribution.even,
-  );
+  static TextStyle _fix(TextStyle? s, {FontWeight? fontWeight}) =>
+      (s ?? const TextStyle()).copyWith(
+        fontFamily: 'NanumSquareNeo',
+        fontWeight: fontWeight,
+        leadingDistribution: TextLeadingDistribution.even,
+      );
 
   static TextTheme _fixedTextTheme(TextTheme base) => base.copyWith(
-    displayLarge: _fix(base.displayLarge),
-    displayMedium: _fix(base.displayMedium),
-    displaySmall: _fix(base.displaySmall),
-    headlineLarge: _fix(base.headlineLarge),
-    headlineMedium: _fix(base.headlineMedium),
-    headlineSmall: _fix(base.headlineSmall),
-    titleLarge: _fix(base.titleLarge),
-    titleMedium: _fix(base.titleMedium),
-    titleSmall: _fix(base.titleSmall),
-    bodyLarge: _fix(base.bodyLarge),
-    bodyMedium: _fix(base.bodyMedium),
-    bodySmall: _fix(base.bodySmall),
-    labelLarge: _fix(base.labelLarge),
-    labelMedium: _fix(base.labelMedium),
-    labelSmall: _fix(base.labelSmall),
+    displayLarge: _fix(base.displayLarge, fontWeight: FontWeight.w800),
+    displayMedium: _fix(base.displayMedium, fontWeight: FontWeight.w800),
+    displaySmall: _fix(base.displaySmall, fontWeight: FontWeight.w800),
+    headlineLarge: _fix(base.headlineLarge, fontWeight: FontWeight.w700),
+    headlineMedium: _fix(base.headlineMedium, fontWeight: FontWeight.w700),
+    headlineSmall: _fix(base.headlineSmall, fontWeight: FontWeight.w700),
+    titleLarge: _fix(base.titleLarge, fontWeight: FontWeight.w700),
+    titleMedium: _fix(base.titleMedium, fontWeight: FontWeight.w700),
+    titleSmall: _fix(base.titleSmall, fontWeight: FontWeight.w700),
+    bodyLarge: _fix(base.bodyLarge, fontWeight: FontWeight.w500),
+    bodyMedium: _fix(base.bodyMedium, fontWeight: FontWeight.w500),
+    bodySmall: _fix(base.bodySmall, fontWeight: FontWeight.w500),
+    labelLarge: _fix(base.labelLarge, fontWeight: FontWeight.w600),
+    labelMedium: _fix(base.labelMedium, fontWeight: FontWeight.w600),
+    labelSmall: _fix(base.labelSmall, fontWeight: FontWeight.w600),
   );
 
   static ThemeData _base({required ColorScheme colorScheme}) {
@@ -72,96 +73,65 @@ class AppThemes {
     );
   }
 
-  // ─── 무채색 테마 (기본) ────────────────────────────────────────────────────
-  // 연한 회색빛, 뽀얗고 경계가 흐릿한 느낌
-  static final ThemeData _grayscale = _base(
+  // ─── 클래식 흑백 테마 ─────────────────────────────────────────────────────
+  // 높은 대비의 뉴트럴 팔레트로 정보 구조가 또렷하게 보이도록 구성합니다.
+  static final ThemeData _classicGray = _base(
     colorScheme: const ColorScheme(
       brightness: Brightness.light,
-      primary: Color(0xFF8E8E8E),
+      primary: Color(0xFF111827),
       onPrimary: Color(0xFFFFFFFF),
-      primaryContainer: Color(0xFFEBEBEB),
-      onPrimaryContainer: Color(0xFF5A5A5A),
-      secondary: Color(0xFFAAAAAA),
+      primaryContainer: Color(0xFFE5E7EB),
+      onPrimaryContainer: Color(0xFF111827),
+      secondary: Color(0xFF4B5563),
       onSecondary: Color(0xFFFFFFFF),
-      secondaryContainer: Color(0xFFF2F2F2),
-      onSecondaryContainer: Color(0xFF6A6A6A),
-      error: Color(0xFFB08A8A),
+      secondaryContainer: Color(0xFFF3F4F6),
+      onSecondaryContainer: Color(0xFF1F2937),
+      error: Color(0xFFB42318),
       onError: Color(0xFFFFFFFF),
-      errorContainer: Color(0xFFF5EAEA),
-      onErrorContainer: Color(0xFF7A5050),
-      surface: Color(0xFFF8F8F8),
-      onSurface: Color(0xFF4A4A4A),
+      errorContainer: Color(0xFFFEE4E2),
+      onErrorContainer: Color(0xFF7A271A),
+      surface: Color(0xFFF7F8FA),
+      onSurface: Color(0xFF111827),
       surfaceContainerLowest: Color(0xFFFFFFFF),
-      onSurfaceVariant: Color(0xFF7A7A7A),
-      outline: Color(0xFFD8D8D8),
-      outlineVariant: Color(0xFFECECEC),
+      onSurfaceVariant: Color(0xFF4B5563),
+      outline: Color(0xFFCBD5E1),
+      outlineVariant: Color(0xFFE2E8F0),
       shadow: Color(0xFF000000),
       scrim: Color(0xFF000000),
-      inverseSurface: Color(0xFF4A4A4A),
-      onInverseSurface: Color(0xFFF8F8F8),
-      inversePrimary: Color(0xFFCCCCCC),
+      inverseSurface: Color(0xFF111827),
+      onInverseSurface: Color(0xFFF9FAFB),
+      inversePrimary: Color(0xFFE5E7EB),
     ),
   );
 
-  // ─── 푸른 계열 테마 ────────────────────────────────────────────────────────
-  // 연한 안개빛 슬레이트 블루, 차분하고 미지근한 느낌
-  static final ThemeData _blue = _base(
+  // ─── 라임 코랄 테마 ────────────────────────────────────────────────────────
+  // 라임과 살구빛 코랄을 중심으로 따뜻하지만 산만하지 않게 구성합니다.
+  static final ThemeData _limeCoral = _base(
     colorScheme: const ColorScheme(
       brightness: Brightness.light,
-      primary: Color(0xFF7A9AB8),
+      primary: Color(0xFF7D8F24),
       onPrimary: Color(0xFFFFFFFF),
-      primaryContainer: Color(0xFFD8E6F0),
-      onPrimaryContainer: Color(0xFF486880),
-      secondary: Color(0xFF9AAEC2),
+      primaryContainer: Color(0xFFC3DC68),
+      onPrimaryContainer: Color(0xFF303A05),
+      secondary: Color(0xFFC87432),
       onSecondary: Color(0xFFFFFFFF),
-      secondaryContainer: Color(0xFFE4EEF7),
-      onSecondaryContainer: Color(0xFF5A7890),
-      error: Color(0xFFB09090),
+      secondaryContainer: Color(0xFFF7D3B8),
+      onSecondaryContainer: Color(0xFF4E2507),
+      error: Color(0xFFC2410C),
       onError: Color(0xFFFFFFFF),
-      errorContainer: Color(0xFFF0E8E8),
-      onErrorContainer: Color(0xFF786060),
-      surface: Color(0xFFF3F7FB),
-      onSurface: Color(0xFF3A4A58),
-      surfaceContainerLowest: Color(0xFFF9FBFE),
-      onSurfaceVariant: Color(0xFF607080),
-      outline: Color(0xFFC2D2E0),
-      outlineVariant: Color(0xFFDDE8F2),
+      errorContainer: Color(0xFFFFE4D1),
+      onErrorContainer: Color(0xFF7C2D12),
+      surface: Color(0xFFFAFBF2),
+      onSurface: Color(0xFF232619),
+      surfaceContainerLowest: Color(0xFFFFFFFF),
+      onSurfaceVariant: Color(0xFF6F735F),
+      outline: Color(0xFFD6DDBE),
+      outlineVariant: Color(0xFFE9EED6),
       shadow: Color(0xFF000000),
       scrim: Color(0xFF000000),
-      inverseSurface: Color(0xFF3A4A58),
-      onInverseSurface: Color(0xFFF3F7FB),
-      inversePrimary: Color(0xFFACC8DC),
-    ),
-  );
-
-  // ─── 녹차색 계열 테마 ─────────────────────────────────────────────────────
-  // 연한 안개빛 세이지 그린, 따뜻하고 밋밋한 느낌
-  static final ThemeData _greenTea = _base(
-    colorScheme: const ColorScheme(
-      brightness: Brightness.light,
-      primary: Color(0xFF7A9E80),
-      onPrimary: Color(0xFFFFFFFF),
-      primaryContainer: Color(0xFFD5EAD8),
-      onPrimaryContainer: Color(0xFF486850),
-      secondary: Color(0xFF96B09A),
-      onSecondary: Color(0xFFFFFFFF),
-      secondaryContainer: Color(0xFFE2F0E5),
-      onSecondaryContainer: Color(0xFF587060),
-      error: Color(0xFFB09080),
-      onError: Color(0xFFFFFFFF),
-      errorContainer: Color(0xFFF0EAE4),
-      onErrorContainer: Color(0xFF786050),
-      surface: Color(0xFFF3F8F4),
-      onSurface: Color(0xFF384840),
-      surfaceContainerLowest: Color(0xFFF8FCF9),
-      onSurfaceVariant: Color(0xFF587860),
-      outline: Color(0xFFBDD0C0),
-      outlineVariant: Color(0xFFDBEEDE),
-      shadow: Color(0xFF000000),
-      scrim: Color(0xFF000000),
-      inverseSurface: Color(0xFF384840),
-      onInverseSurface: Color(0xFFF3F8F4),
-      inversePrimary: Color(0xFFAAC8AE),
+      inverseSurface: Color(0xFF303324),
+      onInverseSurface: Color(0xFFFAFBF2),
+      inversePrimary: Color(0xFFDCEB94),
     ),
   );
 }

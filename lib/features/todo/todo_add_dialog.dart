@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/theme_provider.dart';
 import '../event/event_model.dart';
 import '../event/event_provider.dart';
 import '../event/event_tag_provider.dart';
@@ -185,8 +186,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
                 : (widget.initialDate ?? DateTime.now()));
 
     _time = item?.time ?? event?.time;
-    _selectedTagId =
-        item?.tag ?? event?.tag ?? TagItem.defaultId;
+    _selectedTagId = item?.tag ?? event?.tag ?? TagItem.defaultId;
     _repeat = item?.repeat ?? event?.repeat ?? RepeatType.none;
     _repeatWeekdays =
         List.from(item?.repeatWeekdays ?? event?.repeatWeekdays ?? []);
@@ -409,8 +409,9 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(r.label,
                         style: TextStyle(
-                          fontWeight:
-                              r == _repeat ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: r == _repeat
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         )),
                   ),
                 ))
@@ -464,7 +465,8 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
 
   void _openTagEditDialog() {
     showDialog<void>(
-        context: context, builder: (_) => _TagEditDialog(isEventMode: _isEventMode));
+        context: context,
+        builder: (_) => _TagEditDialog(isEventMode: _isEventMode));
   }
 
   // ── build ─────────────────────────────────────────────────────────────────
@@ -472,17 +474,20 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tags = ref.watch(_isEventMode ? eventTagListProvider : tagListProvider).value ?? [TagItem.defaultTag];
+    final tags = ref
+            .watch(_isEventMode ? eventTagListProvider : tagListProvider)
+            .value ??
+        [TagItem.defaultTag];
     if (!tags.any((t) => t.id == _selectedTagId)) {
       _selectedTagId = TagItem.defaultId;
     }
     final dateLabel = TodoItem.fmtDate(_date);
-    final canDelete = (_isEventMode && _isEventEdit) ||
-        (!_isEventMode && _isTaskEdit);
+    final canDelete =
+        (_isEventMode && _isEventEdit) || (!_isEventMode && _isTaskEdit);
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       content: SizedBox(
@@ -533,13 +538,12 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
                 style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.bold),
                 decoration: InputDecoration(
-                  hintText:
-                      _isEventMode ? '이벤트 제목' : '할 일 제목',
+                  hintText: _isEventMode ? '이벤트 제목' : '할 일 제목',
                   hintStyle: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: cs.onSurfaceVariant
-                          .withValues(alpha: 0.5)),
+                      color:
+                          cs.onSurfaceVariant.withValues(alpha: 0.5)),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -589,8 +593,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
                 children: [
                   Text('태그',
                       style: TextStyle(
-                          fontSize: 13,
-                          color: cs.onSurfaceVariant)),
+                          fontSize: 13, color: cs.onSurfaceVariant)),
                   TextButton.icon(
                     onPressed: _openTagEditDialog,
                     icon: const Icon(Icons.edit_outlined, size: 14),
@@ -619,9 +622,8 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
                     selectedColor: color.withValues(alpha: 0.25),
                     backgroundColor: cs.surfaceContainerLowest,
                     labelStyle: TextStyle(
-                      color: isSelected
-                          ? color
-                          : cs.onSurfaceVariant,
+                      color:
+                          isSelected ? color : cs.onSurfaceVariant,
                       fontWeight: isSelected
                           ? FontWeight.bold
                           : FontWeight.normal,
@@ -630,9 +632,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                       side: BorderSide(
-                        color: isSelected
-                            ? color
-                            : cs.outlineVariant,
+                        color: isSelected ? color : cs.outlineVariant,
                       ),
                     ),
                     showCheckmark: false,
@@ -667,7 +667,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
               Divider(height: 1, color: cs.outlineVariant),
               const SizedBox(height: 12),
 
-              // ── 메모 ─────────────────────────────────────
+              // ── 메모 ──────────────────────────────────────────
               Text('메모',
                   style: TextStyle(
                       fontSize: 12, color: cs.onSurfaceVariant)),
@@ -703,10 +703,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('취소',
-                  style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant)),
+                  style: TextStyle(color: cs.onSurfaceVariant)),
             ),
             const SizedBox(width: 8),
             ElevatedButton(
@@ -722,8 +719,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
               ),
               child: Text(
                 canDelete ? '저장' : '추가',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -776,7 +772,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
         controller: _timeScrollCtl,
         padding: const EdgeInsets.symmetric(vertical: 4),
         itemCount: _timeSlots.length,
-        itemExtent: _timeItemH, // 스크롤 위치 계산을 위해 고정 높이
+        itemExtent: _timeItemH,
         itemBuilder: (context, i) {
           final t = _timeSlots[i];
           final isSelected = _time == t;
@@ -796,9 +792,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
                   Text(t,
                       style: TextStyle(
                         fontSize: 14,
-                        color: isSelected
-                            ? cs.primary
-                            : cs.onSurface,
+                        color: isSelected ? cs.primary : cs.onSurface,
                         fontWeight: isSelected
                             ? FontWeight.bold
                             : FontWeight.normal,
@@ -856,9 +850,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: isSelected
-                        ? Colors.white
-                        : cs.onSurface,
+                    color: isSelected ? Colors.white : cs.onSurface,
                   )),
             ),
           );
@@ -868,7 +860,7 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
   }
 }
 
-// ─── Tag edit dialog (변경 없음) ──────────────────────────────────────────────
+// ─── Tag edit dialog ──────────────────────────────────────────────────────────
 
 class _TagEditDialog extends ConsumerStatefulWidget {
   final bool isEventMode;
@@ -884,11 +876,13 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
   final Map<String, String> _editingColors = {};
   bool _addingNew = false;
   final _newNameCtl = TextEditingController();
-  String _newColor = '#6B7280';
+  String _newColor = TagItem.defaultColorFor(AppThemeType.classicGray);
 
   @override
   void dispose() {
-    for (final c in _nameCtls.values) c.dispose();
+    for (final c in _nameCtls.values) {
+      c.dispose();
+    }
     _newNameCtl.dispose();
     super.dispose();
   }
@@ -943,15 +937,20 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
+          .showSnackBar(SnackBar(content: Text('삭제에 실패했습니다: $e')));
     }
   }
 
   Future<void> _addNew() async {
     final name = _newNameCtl.text.trim();
     if (name.isEmpty) return;
+    final theme = ref.read(themeProvider).value ?? AppThemeType.classicGray;
+    final palette = TagItem.paletteFor(theme);
+    final color = palette.contains(_newColor)
+        ? _newColor
+        : TagItem.defaultColorFor(theme);
     try {
-      final newTag = TagItem(name: name, colorHex: _newColor);
+      final newTag = TagItem(name: name, colorHex: color);
       if (widget.isEventMode) {
         await ref.read(eventTagListProvider.notifier).addTag(newTag);
       } else {
@@ -960,7 +959,7 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
       _newNameCtl.clear();
       setState(() {
         _addingNew = false;
-        _newColor = '#6B7280';
+        _newColor = TagItem.defaultColorFor(theme);
       });
     } catch (e) {
       if (!mounted) return;
@@ -972,14 +971,20 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tags = ref.watch(widget.isEventMode ? eventTagListProvider : tagListProvider).value ?? [TagItem.defaultTag];
+    final theme = ref.watch(themeProvider).maybeWhen(
+          data: (value) => value,
+          orElse: () => AppThemeType.classicGray,
+        );
+    final tags =
+        ref.watch(widget.isEventMode ? eventTagListProvider : tagListProvider)
+                .value ??
+            [TagItem.defaultTagFor(theme)];
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Text('태그 편집',
-          style:
-              TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
       content: SizedBox(
         width: 380,
         child: SingleChildScrollView(
@@ -993,6 +998,7 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
                 onPressed: () => setState(() {
                   _addingNew = true;
                   _editingId = null;
+                  _newColor = TagItem.defaultColorFor(theme);
                 }),
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('+ 태그 추가'),
@@ -1027,10 +1033,11 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 4),
               leading: Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                      color: color, shape: BoxShape.circle)),
+                width: 18,
+                height: 18,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
               title: Text(tag.name,
                   style: const TextStyle(fontSize: 14)),
               trailing: Row(
@@ -1096,11 +1103,9 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: () =>
-                    setState(() => _editingId = null),
+                onPressed: () => setState(() => _editingId = null),
                 child: Text('취소',
-                    style:
-                        TextStyle(color: cs.onSurfaceVariant)),
+                    style: TextStyle(color: cs.onSurfaceVariant)),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
@@ -1153,11 +1158,9 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: () =>
-                    setState(() => _addingNew = false),
+                onPressed: () => setState(() => _addingNew = false),
                 child: Text('취소',
-                    style:
-                        TextStyle(color: cs.onSurfaceVariant)),
+                    style: TextStyle(color: cs.onSurfaceVariant)),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
@@ -1184,10 +1187,14 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
     required String selected,
     required void Function(String) onSelect,
   }) {
+    final theme = ref.watch(themeProvider).maybeWhen(
+          data: (value) => value,
+          orElse: () => AppThemeType.classicGray,
+        );
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: TagItem.palette.map((hex) {
+      children: TagItem.paletteFor(theme).map((hex) {
         final color = hexToColor(hex);
         final isSel = hex == selected;
         return MouseRegion(

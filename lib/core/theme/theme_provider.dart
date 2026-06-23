@@ -1,18 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum AppThemeType {
-  grayscale,
-  blue,
-  greenTea,
-}
+enum AppThemeType { classicGray, limeCoral }
 
 extension AppThemeTypeLabel on AppThemeType {
   String get label => switch (this) {
-        AppThemeType.grayscale => '무채색',
-        AppThemeType.blue => '블루',
-        AppThemeType.greenTea => '녹차',
-      };
+    AppThemeType.classicGray => '클래식',
+    AppThemeType.limeCoral => '라임코랄',
+  };
 }
 
 final themeProvider = AsyncNotifierProvider<ThemeNotifier, AppThemeType>(
@@ -26,13 +21,13 @@ class ThemeNotifier extends AsyncNotifier<AppThemeType> {
   Future<AppThemeType> build() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_key);
-    if (saved != null) {
-      return AppThemeType.values.firstWhere(
-        (e) => e.name == saved,
-        orElse: () => AppThemeType.grayscale,
-      );
-    }
-    return AppThemeType.grayscale;
+    return switch (saved) {
+      'classicGray' => AppThemeType.classicGray,
+      'limeCoral' => AppThemeType.limeCoral,
+      'grayscale' => AppThemeType.limeCoral,
+      'blue' || 'greenTea' => AppThemeType.classicGray,
+      _ => AppThemeType.classicGray,
+    };
   }
 
   Future<void> setTheme(AppThemeType theme) async {

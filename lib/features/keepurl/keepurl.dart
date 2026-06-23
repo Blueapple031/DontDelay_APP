@@ -24,8 +24,7 @@ class UrlApiServerState {
   });
 }
 
-final urlConnectionServiceProvider =
-    Provider((ref) => UrlConnectionService());
+final urlConnectionServiceProvider = Provider((ref) => UrlConnectionService());
 
 final urlConnectionProvider = FutureProvider<UrlConnectionConfig>((ref) async {
   return ref.read(urlConnectionServiceProvider).loadOrCreate();
@@ -33,8 +32,8 @@ final urlConnectionProvider = FutureProvider<UrlConnectionConfig>((ref) async {
 
 final urlApiServerStateProvider =
     NotifierProvider<UrlApiServerStateNotifier, UrlApiServerState>(
-  UrlApiServerStateNotifier.new,
-);
+      UrlApiServerStateNotifier.new,
+    );
 
 class UrlApiServerStateNotifier extends Notifier<UrlApiServerState> {
   @override
@@ -70,8 +69,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     var result = urls;
 
     if (_selectedFolderId != null) {
-      result =
-          result.where((u) => u.folderId == _selectedFolderId).toList();
+      result = result.where((u) => u.folderId == _selectedFolderId).toList();
     }
 
     if (_watchLaterOnly) {
@@ -165,7 +163,10 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: () => _showAddFolderDialog(context),
-                    icon: const Icon(Icons.create_new_folder_outlined, size: 18),
+                    icon: const Icon(
+                      Icons.create_new_folder_outlined,
+                      size: 18,
+                    ),
                     label: const Text('폴더 추가'),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -189,7 +190,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6D28D9),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -218,8 +219,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                   decoration: InputDecoration(
                     hintText: '제목, URL로 검색...',
                     hintStyle: TextStyle(color: Colors.grey.shade400),
-                    prefixIcon:
-                        Icon(Icons.search, color: Colors.grey.shade400),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
@@ -229,8 +229,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide:
-                          const BorderSide(color: Color(0xFF6D28D9)),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -256,8 +257,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  backgroundColor:
-                      _watchLaterOnly ? const Color(0xFFFFF7ED) : Colors.white,
+                  backgroundColor: _watchLaterOnly
+                      ? const Color(0xFFFFF7ED)
+                      : Colors.white,
                   side: BorderSide(
                     color: _watchLaterOnly
                         ? const Color(0xFFF97316)
@@ -371,7 +373,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => setState(() => _selectedFolderId = folderId),
-      selectedColor: const Color(0xFF6D28D9),
+      selectedColor: Theme.of(context).colorScheme.primary,
       backgroundColor: Colors.white,
       labelStyle: TextStyle(
         color: isSelected ? Colors.white : Colors.black87,
@@ -381,7 +383,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
           color: isSelected
-              ? const Color(0xFF6D28D9)
+              ? Theme.of(context).colorScheme.primary
               : Colors.grey.shade300,
         ),
       ),
@@ -401,9 +403,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
               .read(urlListProvider.notifier)
               .moveToFolder(details.data, folderId);
           if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('"$label" 폴더로 이동했습니다.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('"$label" 폴더로 이동했습니다.')));
         },
         builder: (context, candidate, rejected) {
           final isHover = candidate.isNotEmpty;
@@ -413,9 +415,14 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
               border: isHover
-                  ? Border.all(color: const Color(0xFF6D28D9), width: 2)
+                  ? Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    )
                   : null,
-              color: isHover ? const Color(0xFFF5F3FF) : null,
+              color: isHover
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : null,
             ),
             child: chip,
           );
@@ -432,9 +439,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F3FF),
+        color: const Color(0xFFF6F9E6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFDDD6FE)),
+        border: Border.all(color: const Color(0xFFDDE8A8)),
       ),
       child: asyncConnection.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -555,9 +562,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
           tooltip: '$label 복사',
           onPressed: () {
             Clipboard.setData(ClipboardData(text: value));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$label이(가) 복사되었습니다.')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('$label이(가) 복사되었습니다.')));
           },
           icon: const Icon(Icons.copy, size: 18),
         ),
@@ -569,17 +576,18 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     setState(() => _testingConnection = true);
     try {
       final client = HttpClient();
-      final request =
-          await client.getUrl(Uri.parse('http://127.0.0.1:$port/api/health'));
+      final request = await client.getUrl(
+        Uri.parse('http://127.0.0.1:$port/api/health'),
+      );
       final response = await request.close();
       final body = await response.transform(utf8.decoder).join();
       client.close();
 
       if (!mounted) return;
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('연결 성공: $body')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('연결 성공: $body')));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('연결 실패 (${response.statusCode})')),
@@ -587,9 +595,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('연결 실패: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('연결 실패: $e')));
     } finally {
       if (mounted) setState(() => _testingConnection = false);
     }
@@ -696,9 +704,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     final url = urlController.text.trim();
     if (!UrlItem.isValidSavableUrl(url)) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('저장할 수 있는 URL 형식이 아닙니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('저장할 수 있는 URL 형식이 아닙니다.')));
       }
       return;
     }
@@ -706,7 +714,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     final title = titleController.text.trim();
 
     try {
-      await ref.read(urlListProvider.notifier).addUrl(
+      await ref
+          .read(urlListProvider.notifier)
+          .addUrl(
             url: url,
             title: title.isEmpty ? url : title,
             folderId: selectedFolderId.isEmpty ? null : selectedFolderId,
@@ -714,21 +724,21 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
             watchLater: watchLater,
           );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('URL이 저장되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('URL이 저장되었습니다.')));
       }
     } on UrlDuplicateException {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('이미 저장된 URL입니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('이미 저장된 URL입니다.')));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장 실패: $e')));
       }
     }
   }
@@ -748,8 +758,14 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('추가')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('추가'),
+          ),
         ],
       ),
     );
@@ -757,15 +773,15 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     try {
       await ref.read(urlFolderListProvider.notifier).addFolder(controller.text);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('폴더가 추가되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('폴더가 추가되었습니다.')));
       }
     } on UrlFolderDuplicateNameException {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('이미 같은 이름의 폴더가 있습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('이미 같은 이름의 폴더가 있습니다.')));
       }
     }
   }
@@ -816,7 +832,10 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('닫기')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('닫기'),
+          ),
         ],
       ),
     );
@@ -831,13 +850,16 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('폴더 이름 변경'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-        ),
+        content: TextField(controller: controller, autofocus: true),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('저장')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('저장'),
+          ),
         ],
       ),
     );
@@ -848,9 +870,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
           .renameFolder(folder.id, controller.text);
     } on UrlFolderDuplicateNameException {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('이미 같은 이름의 폴더가 있습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('이미 같은 이름의 폴더가 있습니다.')));
       }
     }
   }
@@ -864,8 +886,14 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
           '"${folder.name}" 폴더를 삭제할까요?\n포함된 URL은 "${UrlFolder.defaultFolderName}" 폴더로 이동합니다.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('삭제')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('삭제'),
+          ),
         ],
       ),
     );
@@ -879,15 +907,15 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     try {
       await ref.read(urlFolderListProvider.notifier).deleteFolder(folder.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('폴더가 삭제되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('폴더가 삭제되었습니다.')));
       }
     } on UrlFolderProtectedException {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('기본 폴더는 삭제할 수 없습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('기본 폴더는 삭제할 수 없습니다.')));
       }
     }
   }
@@ -920,9 +948,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
     if (selected == null || selected == item.folderId) return;
     await ref.read(urlListProvider.notifier).moveToFolder(item.id, selected);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('폴더가 변경되었습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('폴더가 변경되었습니다.')));
     }
   }
 
@@ -935,9 +963,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
         content: TextField(
           controller: controller,
           maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: '메모를 입력하세요 (비우면 삭제)',
-          ),
+          decoration: const InputDecoration(hintText: '메모를 입력하세요 (비우면 삭제)'),
           autofocus: true,
         ),
         actions: [
@@ -953,7 +979,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       ),
     );
     if (saved != true) return;
-    await ref.read(urlListProvider.notifier).updateMemo(item.id, controller.text);
+    await ref
+        .read(urlListProvider.notifier)
+        .updateMemo(item.id, controller.text);
   }
 
   Widget _buildUrlCard(
@@ -985,12 +1013,12 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                   Container(
                     padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEEF2FF),
+                      color: const Color(0xFFF0F7CC),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
                       item.icon,
-                      color: const Color(0xFF6366F1),
+                      color: const Color(0xFF7D8F24),
                       size: 16,
                     ),
                   ),
@@ -1030,7 +1058,11 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                   PopupMenuButton<String>(
                     padding: EdgeInsets.zero,
                     iconSize: 18,
-                    icon: Icon(Icons.more_vert, size: 18, color: Colors.grey[500]),
+                    icon: Icon(
+                      Icons.more_vert,
+                      size: 18,
+                      color: Colors.grey[500],
+                    ),
                     onSelected: (value) =>
                         _handleCardAction(value, item, folders),
                     itemBuilder: (_) => [
@@ -1038,28 +1070,14 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                         value: 'open',
                         child: Text('브라우저에서 열기'),
                       ),
-                      const PopupMenuItem(
-                        value: 'move',
-                        child: Text('폴더 이동'),
-                      ),
-                      const PopupMenuItem(
-                        value: 'memo',
-                        child: Text('메모'),
-                      ),
-                      const PopupMenuItem(
-                        value: 'copy',
-                        child: Text('URL 복사'),
-                      ),
+                      const PopupMenuItem(value: 'move', child: Text('폴더 이동')),
+                      const PopupMenuItem(value: 'memo', child: Text('메모')),
+                      const PopupMenuItem(value: 'copy', child: Text('URL 복사')),
                       PopupMenuItem(
                         value: 'watch',
-                        child: Text(
-                          item.watchLater ? '나중에 보기 해제' : '나중에 보기',
-                        ),
+                        child: Text(item.watchLater ? '나중에 보기 해제' : '나중에 보기'),
                       ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('삭제'),
-                      ),
+                      const PopupMenuItem(value: 'delete', child: Text('삭제')),
                     ],
                   ),
                 ],
@@ -1078,8 +1096,8 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
                 children: [
                   _buildBadge(
                     _folderName(folders, item.folderId),
-                    const Color(0xFFEEF2FF),
-                    const Color(0xFF6366F1),
+                    const Color(0xFFF0F7CC),
+                    const Color(0xFF6F7F1F),
                   ),
                   if (item.source == 'extension') ...[
                     const SizedBox(width: 4),
@@ -1113,7 +1131,7 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFF6D28D9)),
+            border: Border.all(color: Theme.of(context).colorScheme.primary),
           ),
           child: Text(
             item.title,
@@ -1133,9 +1151,9 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       await openUrlInBrowser(item.url);
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('페이지를 열 수 없습니다: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('페이지를 열 수 없습니다: $e')));
     }
   }
 
@@ -1185,17 +1203,17 @@ class _UrlScreenState extends ConsumerState<UrlScreen> {
       case 'copy':
         await Clipboard.setData(ClipboardData(text: item.url));
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('URL이 복사되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('URL이 복사되었습니다.')));
       case 'watch':
         await ref.read(urlListProvider.notifier).toggleWatchLater(item.id);
       case 'delete':
         await ref.read(urlListProvider.notifier).deleteUrl(item.id);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('URL이 삭제되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('URL이 삭제되었습니다.')));
     }
   }
 

@@ -1,74 +1,170 @@
 import 'package:dio/dio.dart';
-import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// 1. 세션(쿠키) 관리를 위한 Dio Provider 세팅
-final dioProvider = Provider<Dio>((ref) {
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: 'http://dontdelay.duckdns.org:8080',
-      connectTimeout: const Duration(seconds: 5),
-      receiveTimeout: const Duration(seconds: 3),
-    ),
-  );
+import '../../core/api_client.dart';
+import '../../core/api_error.dart';
+import 'user_profile.dart';
 
-  // Spring Security 세션 ID 유지를 위해 CookieManager 추가
-  final cookieJar = CookieJar();
-  dio.interceptors.add(CookieManager(cookieJar));
-
-  return dio;
-});
-
-// 2. 로그인 상태 관리를 위한 Provider
 final authProvider = NotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
+
+final userProfileProvider =
+    NotifierProvider<UserProfileNotifier, UserProfile?>(UserProfileNotifier.new);
 
 class AuthNotifier extends Notifier<bool> {
   @override
   bool build() => false;
 
-  // 회원가입 API 연동 (성공 시 null, 실패 시 에러 메시지 반환)
-  Future<String?> signUp(String username, String password) async {
+  /// 서버 연결 확인 (`GET /api/health`)
+  Future<String?> checkServerHealth() async {
     try {
-      final response = await ref
-          .read(dioProvider)
-          .post(
-            '/api/auth/signup',
-            data: {'username': username, 'password': password},
-          );
-
-      if (response.statusCode == 200) {
-        return null; // 성공
-      }
-      return "회원가입에 실패했습니다.";
+      final response = await ref.read(dioProvider).get('/api/health');
+      if (response.statusCode == 200) return null;
+      return '서버 상태를 확인할 수 없습니다.';
     } on DioException catch (e) {
-      // 명세서 조건: 400 Bad Request 시 username 중복
-      if (e.response?.statusCode == 400) {
-        return "이미 존재하는 사용자명입니다.";
-      }
-      return "서버와 연결할 수 없습니다.";
+      return parseConnectionError(e) ?? '서버와 연결할 수 없습니다.';
+    } catch (e) {
+      debugPrint('서버 상태 확인 에러: $e');
+      return '서버와 연결할 수 없습니다.';
     }
   }
 
-  // 로그인 API 연동
-  Future<bool> login(String username, String password) async {
+  Future<String?> signUp({
+    required String username,
+    required String password,
+    required String realName,
+    required String email,
+    required String department,
+  }) async {
     try {
-      final response = await ref
-          .read(dioProvider)
-          .post(
+      final response = await ref.read(dioProvider).post(
+            '/api/auth/signup',
+            data: {
+              'username': username,
+              'password': password,
+              'realName': realName,
+              'email': email,
+              'department': department,
+            },
+          );
+
+      if (response.statusCode == 200) {
+        return null;
+      }
+      return '회원가입에 실패했습니다.';
+    } on DioException catch (e) {
+      return _parseSignupError(e);
+    }
+  }
+
+  /// 성공 시 null, 실패 시 사용자에게 보여줄 메시지 반환
+  Future<String?> login(String username, String password) async {
+    try {
+      final response = await ref.read(dioProvider).post(
             '/api/auth/login',
             data: {'username': username, 'password': password},
           );
 
       if (response.statusCode == 200) {
-        state = true; // 로그인 상태 true로 변경
-        return true;
+        state = true;
+        await ref.read(userProfileProvider.notifier).syncAfterLogin(response.data);
+        return null;
       }
-      return false;
+      return '로그인에 실패했습니다.';
+    } on DioException catch (e) {
+      debugPrint(
+        '로그인 에러: status=${e.response?.statusCode} body=${e.response?.data}',
+      );
+      return _parseLoginError(e);
     } catch (e) {
-      debugPrint("로그인 에러: $e");
-      return false;
+      debugPrint('로그인 에러: $e');
+      return '서버와 연결할 수 없습니다.';
     }
   }
+
+  void logout() {
+    state = false;
+    ref.read(userProfileProvider.notifier).clear();
+  }
+}
+
+class UserProfileNotifier extends Notifier<UserProfile?> {
+  @override
+  UserProfile? build() => null;
+
+  Future<void> load() async {
+    final profile = await _fetchMe();
+    if (profile != null) {
+      state = profile;
+    }
+  }
+
+  /// 1) 로그인 응답 프로필 반영 → 2) /me로 세션·프로필 확인
+  Future<void> syncAfterLogin(dynamic loginBody) async {
+    final fromLogin = UserProfile.tryParse(loginBody);
+    if (fromLogin != null && fromLogin.username.isNotEmpty) {
+      state = fromLogin;
+    }
+
+    final fromMe = await _fetchMe();
+    if (fromMe != null) {
+      state = fromMe;
+    }
+  }
+
+  Future<UserProfile?> _fetchMe() async {
+    try {
+      final response = await ref.read(dioProvider).get('/api/auth/me');
+      if (response.statusCode == 200) {
+        return UserProfile.tryParse(response.data);
+      }
+      debugPrint('프로필 조회 실패: status=${response.statusCode} body=${response.data}');
+    } on DioException catch (e) {
+      debugPrint(
+        '프로필 조회 에러: status=${e.response?.statusCode} body=${e.response?.data}',
+      );
+    }
+    return null;
+  }
+
+  void clear() => state = null;
+}
+
+String _parseLoginError(DioException e) {
+  final connectionError = parseConnectionError(e);
+  if (connectionError != null) return connectionError;
+
+  final message = messageFromResponse(e.response?.data);
+
+  if (isInvalidCredentials(e)) {
+    return message ?? '아이디 또는 비밀번호가 올바르지 않습니다.';
+  }
+
+  if (isAuthEndpointBlocked(e)) {
+    return '서버에 연결되었지만 로그인 API가 차단되어 있습니다. '
+        '백엔드에서 /api/auth/login, /api/auth/signup 을 permitAll로 설정해주세요.';
+  }
+
+  if (message != null && message.isNotEmpty) return message;
+  return '로그인에 실패했습니다.';
+}
+
+String _parseSignupError(DioException e) {
+  final connectionError = parseConnectionError(e);
+  if (connectionError != null) return connectionError;
+
+  if (e.response?.statusCode == 400) {
+    final message = messageFromResponse(e.response?.data);
+    if (message != null && message.isNotEmpty) {
+      return message;
+    }
+    return '입력값을 확인해주세요.';
+  }
+
+  if (isAuthEndpointBlocked(e)) {
+    return '서버에 연결되었지만 회원가입 API가 차단되어 있습니다. '
+        '백엔드에서 /api/auth/signup 을 permitAll로 설정해주세요.';
+  }
+
+  return '서버와 연결할 수 없습니다.';
 }

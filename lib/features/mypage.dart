@@ -1,15 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/theme/theme_provider.dart';
+import 'todo/tag_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'auth/auth_provider.dart';
 
-class MyPageScreen extends StatefulWidget {
+class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
 
   @override
-  State<MyPageScreen> createState() => _MyPageScreenState();
+  ConsumerState<MyPageScreen> createState() => _MyPageScreenState();
 }
 
-class _MyPageScreenState extends State<MyPageScreen> {
-  // 상태 관리를 위한 임시 데이터
-  String _nickname = '안미룬이';
+class _MyPageScreenState extends ConsumerState<MyPageScreen> {
+  void _refreshProfile() {
+    if (ref.read(authProvider)) {
+      ref.read(userProfileProvider.notifier).load();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshProfile());
+  }
 
   // 프로필 사진 변경 로직 (추후 image_picker 등 연동 필요)
   void _changeProfileImage() {
@@ -18,58 +32,112 @@ class _MyPageScreenState extends State<MyPageScreen> {
     ).showSnackBar(const SnackBar(content: Text('프로필 사진 변경 기능은 추후 구현됩니다.')));
   }
 
-  // 닉네임 수정 다이얼로그
-  void _editNickname() {
-    final TextEditingController nicknameController = TextEditingController(
-      text: _nickname,
-    );
+  // 테마 색상 변경 다이얼로그
+  void _showThemeSelectionDialog() {
+    final currentTheme =
+        ref.watch(themeProvider).value ?? AppThemeType.classicGray;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(
-          '닉네임 변경',
+          '테마 색상 변경',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: TextField(
-          controller: nicknameController,
-          decoration: InputDecoration(
-            hintText: '새로운 닉네임을 입력하세요',
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.min,
+            children: AppThemeType.values.map((themeType) {
+              final isSelected = themeType == currentTheme;
+              final List<Color> themeColors = switch (themeType) {
+                AppThemeType.classicGray => const [
+                  Color(0xFFE5E7EB),
+                  Color(0xFF111827),
+                ],
+                AppThemeType.limeCoral => const [
+                  Color(0xFFC3DC68),
+                  Color(0xFF7D8F24),
+                ],
+              };
+              final themeColor = themeColors.last;
+
+              return GestureDetector(
+                onTap: () {
+                  ref.read(themeProvider.notifier).setTheme(themeType);
+                  ref.invalidate(tagListProvider);
+                  Navigator.pop(context);
+                },
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: SizedBox(
+                    width: 72,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: themeColors,
+                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.black87
+                                  : Colors.grey.shade300,
+                              width: isSelected ? 3 : 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: themeColor.withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 24,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          themeType.label,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? Colors.black87
+                                : Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              if (nicknameController.text.trim().isNotEmpty) {
-                setState(() {
-                  _nickname = nicknameController.text.trim();
-                });
-              }
-              Navigator.pop(context);
-            },
-            child: const Text(
-              '저장',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: const Text('닫기', style: TextStyle(color: Colors.grey)),
           ),
         ],
       ),
@@ -102,7 +170,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -166,8 +234,9 @@ class _MyPageScreenState extends State<MyPageScreen> {
               ),
             ),
             onPressed: () {
-              // TODO: 로그아웃 처리 및 로그인 화면으로 라우팅 이동
+              ref.read(authProvider.notifier).logout();
               Navigator.pop(context);
+              context.go('/dashboard');
             },
             child: const Text(
               '로그아웃',
@@ -184,6 +253,20 @@ class _MyPageScreenState extends State<MyPageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColor = Theme.of(context).colorScheme.primary;
+    ref.listen(authProvider, (previous, loggedIn) {
+      if (loggedIn && previous != loggedIn) {
+        _refreshProfile();
+      }
+    });
+
+    final profile = ref.watch(userProfileProvider);
+    final realName = profile?.realName ?? '';
+    final username = profile?.username ?? '';
+    final email = profile?.email ?? '';
+    final department = profile?.department ?? '';
+    final major = profile?.major ?? '';
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: Padding(
@@ -234,7 +317,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF4F46E5),
+                                      color: themeColor,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: Colors.white,
@@ -252,36 +335,36 @@ class _MyPageScreenState extends State<MyPageScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // 닉네임
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  _nickname,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit,
-                                    size: 20,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: _editNickname,
-                                  tooltip: '닉네임 수정',
-                                ),
-                              ],
-                            ),
-                            const Text(
-                              'user@example.com', // 임시 이메일
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
+                            Text(
+                              realName.isNotEmpty ? realName : '실명 미등록',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (username.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                '@$username',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                            if (email.isNotEmpty ||
+                                department.isNotEmpty ||
+                                major.isNotEmpty) ...[
+                              const SizedBox(height: 20),
+                              const Divider(),
+                              const SizedBox(height: 16),
+                              if (email.isNotEmpty)
+                                _buildProfileInfoRow('이메일', email),
+                              if (department.isNotEmpty)
+                                _buildProfileInfoRow('학과', department),
+                              if (major.isNotEmpty)
+                                _buildProfileInfoRow('전공', major),
+                            ],
                           ],
                         ),
                       ),
@@ -296,13 +379,12 @@ class _MyPageScreenState extends State<MyPageScreen> {
                         ),
                         child: Column(
                           children: [
+
                             _buildSettingMenu(
-                              icon: Icons.category_rounded,
-                              title: '나의 카테고리 관리',
-                              subtitle: '일정 카테고리를 추가, 수정, 삭제합니다.',
-                              onTap: () {
-                                // TODO: 카테고리 관리 페이지로 이동
-                              },
+                              icon: Icons.palette_outlined,
+                              title: '테마 색상 설정',
+                              subtitle: '앱의 기본 테마 색상을 변경합니다.',
+                              onTap: _showThemeSelectionDialog,
                             ),
                             const Divider(height: 1),
                             _buildSettingMenu(
@@ -334,6 +416,37 @@ class _MyPageScreenState extends State<MyPageScreen> {
     );
   }
 
+  Widget _buildProfileInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 56,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // 설정 메뉴 아이템 위젯
   Widget _buildSettingMenu({
     required IconData icon,
@@ -341,8 +454,10 @@ class _MyPageScreenState extends State<MyPageScreen> {
     required String subtitle,
     required VoidCallback onTap,
     Color titleColor = Colors.black87,
-    Color iconColor = const Color(0xFF4F46E5),
+    Color? iconColor,
   }) {
+    final effectiveIconColor =
+        iconColor ?? Theme.of(context).colorScheme.primary;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -353,10 +468,10 @@ class _MyPageScreenState extends State<MyPageScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: effectiveIconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor, size: 24),
+              child: Icon(icon, color: effectiveIconColor, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(

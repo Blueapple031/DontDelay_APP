@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/theme/theme_provider.dart';
+
 const _uuid = Uuid();
 
 class TagItem {
@@ -8,21 +10,27 @@ class TagItem {
   final String name;
   final String colorHex;
 
-  TagItem({
-    String? id,
-    required this.name,
-    required this.colorHex,
-  }) : id = id ?? _uuid.v4();
+  TagItem({String? id, required this.name, required this.colorHex})
+    : id = id ?? _uuid.v4();
 
   static const defaultId = 'default';
 
-  static TagItem get defaultTag => TagItem(
-        id: defaultId,
-        name: '기본값',
-        colorHex: '#6B7280',
-      );
+  static TagItem get defaultTag => defaultTagFor(AppThemeType.classicGray);
 
-  static const List<String> palette = [
+  static TagItem defaultTagFor(AppThemeType theme) =>
+      TagItem(id: defaultId, name: '기본값', colorHex: defaultColorFor(theme));
+
+  static String defaultColorFor(AppThemeType theme) => switch (theme) {
+    AppThemeType.classicGray => '#6366F1',
+    AppThemeType.limeCoral => '#C3DC68',
+  };
+
+  static List<String> paletteFor(AppThemeType theme) => switch (theme) {
+    AppThemeType.classicGray => classicPalette,
+    AppThemeType.limeCoral => limeCoralPalette,
+  };
+
+  static const List<String> classicPalette = [
     '#EF4444',
     '#F97316',
     '#EAB308',
@@ -32,23 +40,34 @@ class TagItem {
     '#8B5CF6',
   ];
 
+  static const List<String> limeCoralPalette = [
+    '#C3DC68',
+    '#EDA367',
+    '#6FA8DC',
+    '#A88AD8',
+    '#E58AA5',
+    '#57B8A6',
+    '#D9B84F',
+    '#8B9AAE',
+  ];
+
   TagItem copyWith({String? name, String? colorHex}) => TagItem(
-        id: id,
-        name: name ?? this.name,
-        colorHex: colorHex ?? this.colorHex,
-      );
+    id: id,
+    name: name ?? this.name,
+    colorHex: colorHex ?? this.colorHex,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'colorHex': colorHex,
-      };
+    'id': id,
+    'name': name,
+    'colorHex': colorHex,
+  };
 
   factory TagItem.fromJson(Map<String, dynamic> json) => TagItem(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        colorHex: json['colorHex'] as String,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    colorHex: json['colorHex'] as String,
+  );
 }
 
 Color hexToColor(String hex) {
