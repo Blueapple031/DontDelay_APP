@@ -19,8 +19,24 @@ class TodoScreen extends ConsumerStatefulWidget {
 class _TodoScreenState extends ConsumerState<TodoScreen> {
   TodoViewMode _viewMode = TodoViewMode.kanban;
 
+  static String _fmtDateDisplay(String dateStr) {
+    final dt = DateTime.tryParse(dateStr);
+    if (dt == null) return dateStr;
+    return '${dt.month}월 ${dt.day}일';
+  }
+
+  static bool _isPastDone(TodoItem t) {
+    if (t.status != TodoStatus.done) return false;
+    final dt = DateTime.tryParse(t.date);
+    if (dt == null) return false;
+    final today = DateTime.now();
+    final todayStart = DateTime(today.year, today.month, today.day);
+    return dt.isBefore(todayStart);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final asyncTodos = ref.watch(todoListProvider);
 
     return Padding(
@@ -35,14 +51,18 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '할 일 관리',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '할 일을 추가하고 상태를 변경하세요',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(
+                        fontSize: 14, color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -64,27 +84,16 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                     selected: {_viewMode},
                     onSelectionChanged: (s) =>
                         setState(() => _viewMode = s.first),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.auto_awesome,
-                      color: Color(0xFF6D28D9),
-                      size: 18,
-                    ),
-                    label: const Text(
-                      'AI 자동 분류',
-                      style: TextStyle(color: Color(0xFF6D28D9)),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF6D28D9)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.resolveWith(
+                        (st) => st.contains(WidgetState.selected)
+                            ? const Color(0xFF1F2937)
+                            : null,
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
+                      foregroundColor: WidgetStateProperty.resolveWith(
+                        (st) => st.contains(WidgetState.selected)
+                            ? Colors.white
+                            : null,
                       ),
                     ),
                   ),
@@ -95,20 +104,15 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                     label: const Text(
                       '새 할 일 추가',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4F46E5),
+                      backgroundColor: const Color(0xFF1F2937),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                          borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
+                          horizontal: 16, vertical: 16),
                     ),
                   ),
                 ],
@@ -116,27 +120,37 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
             ],
           ),
           const SizedBox(height: 32),
-
           Expanded(
             child: asyncTodos.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (e, _) =>
+                  Center(child: Text('오류가 발생했습니다: $e')),
               data: (todos) {
                 if (_viewMode == TodoViewMode.eisenhower) {
                   return TodoEisenhowerBoard(todos: todos);
                 }
                 final tags = ref.watch(tagListProvider).value ??
                     [TagItem.defaultTag];
-                final tagMap = {
-                  for (final t in tags) t.id: t
-                };
-                final todoItems =
-                    todos.where((t) => t.status == TodoStatus.todo).toList();
+                final tagMap = {for (final t in tags) t.id: t};
+
+                final today = DateTime.now();
+                final todayStart =
+                    DateTime(today.year, today.month, today.day);
+
+                final todoItems = todos
+                    .where((t) => t.status == TodoStatus.todo)
+                    .toList();
                 final inProgressItems = todos
                     .where((t) => t.status == TodoStatus.inProgress)
                     .toList();
-                final doneItems =
-                    todos.where((t) => t.status == TodoStatus.done).toList();
+                // 완료: 과거(어제 이전) done task 숨김
+                final doneItems = todos.where((t) {
+                  if (t.status != TodoStatus.done) return false;
+                  final dt = DateTime.tryParse(t.date);
+                  if (dt == null) return true;
+                  return !dt.isBefore(todayStart);
+                }).toList();
 
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,6 +199,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     required List<TodoItem> items,
     required Map<String, TagItem> tagMap,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Expanded(
       child: DragTarget<TodoItem>(
         onAcceptWithDetails: (details) async {
@@ -194,9 +209,8 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                 .changeStatus(details.data.id, status);
           } catch (e) {
             if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('저장에 실패했습니다: $e')),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
           }
         },
         builder: (context, candidateData, rejectedData) {
@@ -204,15 +218,12 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
           return Container(
             decoration: BoxDecoration(
               color: isHovering
-                  ? const Color(0xFFF3E8FF).withValues(alpha: 0.5)
+                  ? cs.primaryContainer.withValues(alpha: 0.5)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
               border: isHovering
                   ? Border.all(
-                      color: const Color(0xFF6D28D9)
-                          .withValues(alpha: 0.3),
-                      width: 2,
-                    )
+                      color: cs.primary.withValues(alpha: 0.4), width: 2)
                   : null,
             ),
             child: Column(
@@ -223,31 +234,24 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        items.length.toString(),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text(title,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: cs.onSurface)),
+                      Text(items.length.toString(),
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: cs.onSurfaceVariant,
+                              fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
                 Expanded(
                   child: ListView(
                     children: [
-                      ...items.map(
-                        (item) => _buildDraggableTaskCard(
-                            context, ref, item, tagMap),
-                      ),
+                      ...items.map((item) =>
+                          _buildDraggableTaskCard(context, ref, item, tagMap)),
                       if (status != TodoStatus.done)
                         _buildAddCardButton(context, ref, status),
                     ],
@@ -274,35 +278,44 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
         borderRadius: BorderRadius.circular(12),
         child: SizedBox(
           width: 280,
-          child: _buildTaskCardContent(item, tagMap),
+          child: _buildTaskCardContent(context, item, tagMap),
         ),
       ),
       childWhenDragging: Opacity(
         opacity: 0.3,
-        child: _buildTaskCardContent(item, tagMap),
+        child: _buildTaskCardContent(context, item, tagMap),
       ),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: InkWell(
           onTap: () => showTodoEditDialog(context, ref, item),
           borderRadius: BorderRadius.circular(12),
-          child: _buildTaskCardContent(item, tagMap),
+          child: _buildTaskCardContent(context, item, tagMap),
         ),
       ),
     );
   }
 
   Widget _buildTaskCardContent(
-      TodoItem item, Map<String, TagItem> tagMap) {
+    BuildContext context,
+    TodoItem item,
+    Map<String, TagItem> tagMap,
+  ) {
+    final cs = Theme.of(context).colorScheme;
     final tag = tagMap[item.tag] ?? TagItem.defaultTag;
     final tagColor = hexToColor(tag.colorHex);
+
+    final dateLabel = _fmtDateDisplay(item.date);
+    final timeLabel =
+        item.time != null ? ' ${item.time}' : '';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: cs.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -316,22 +329,38 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
         children: [
           Text(
             item.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: cs.onSurface,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            item.date,
-            style: TextStyle(fontSize: 13, color: Colors.grey[500]),
-          ),
-          const SizedBox(height: 12),
-          _buildBadge(
-            tag.name,
-            tagColor.withValues(alpha: 0.15),
-            tagColor,
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: tagColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  tag.name,
+                  style: TextStyle(
+                    color: tagColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '$dateLabel$timeLabel',
+                style: TextStyle(
+                    fontSize: 12, color: cs.onSurfaceVariant),
+              ),
+            ],
           ),
         ],
       ),
@@ -347,47 +376,31 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () => showTodoAddDialog(context, ref, initialStatus: status),
+        onTap: () =>
+            showTodoAddDialog(context, ref, initialStatus: status),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: CustomPaintDecoration(
-            border: Border.all(
-              color: Colors.grey.shade400,
-              style: BorderStyle.none,
-            ),
+            border: Border.all(color: Colors.grey.shade400),
             borderRadius: BorderRadius.circular(12),
             dashPattern: const [6, 4],
           ),
-          child: const Center(
+          child: Center(
             child: Text(
               '+ 카드 추가',
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.bold),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBadge(String text, Color bgColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
         ),
       ),
     );
   }
 }
+
+// ── 점선 border decoration ──────────────────────────────────────────────────
 
 class CustomPaintDecoration extends Decoration {
   final Border border;
@@ -412,10 +425,7 @@ class _CustomPaintDecorationPainter extends BoxPainter {
   final List<double> dashPattern;
 
   _CustomPaintDecorationPainter(
-    this.border,
-    this.borderRadius,
-    this.dashPattern,
-  );
+      this.border, this.borderRadius, this.dashPattern);
 
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
@@ -424,26 +434,20 @@ class _CustomPaintDecorationPainter extends BoxPainter {
       ..color = border.top.color
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
-
     final rrect = RRect.fromRectAndRadius(rect, borderRadius.topLeft);
-
-    Path path = Path()..addRRect(rrect);
-    Path dashPath = Path();
+    final path = Path()..addRRect(rrect);
+    final dashPath = Path();
     double distance = 0.0;
-
-    for (PathMetric pathMetric in path.computeMetrics()) {
-      while (distance < pathMetric.length) {
-        double dashLength = dashPattern[0];
-        double spaceLength = dashPattern[1];
+    for (final metric in path.computeMetrics()) {
+      while (distance < metric.length) {
         dashPath.addPath(
-          pathMetric.extractPath(distance, distance + dashLength),
+          metric.extractPath(distance, distance + dashPattern[0]),
           Offset.zero,
         );
-        distance += dashLength + spaceLength;
+        distance += dashPattern[0] + dashPattern[1];
       }
       distance = 0.0;
     }
-
     canvas.drawPath(dashPath, paint);
   }
 }

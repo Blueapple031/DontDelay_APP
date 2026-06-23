@@ -19,7 +19,7 @@ class TagItem {
   static TagItem get defaultTag => TagItem(
         id: defaultId,
         name: '기본값',
-        colorHex: '#6366F1',
+        colorHex: '#6B7280',
       );
 
   static const List<String> palette = [

@@ -13,6 +13,16 @@ import 'features/keepurl/keepurl.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Flutter Windows 버그: Alt 키가 modifier 플래그 없이 key-down 이벤트를 보내는 문제
+  // (https://github.com/flutter/flutter/issues) 무시 처리
+  FlutterError.onError = (details) {
+    final msg = details.exception.toString();
+    if (msg.contains('keysPressed') || msg.contains('RawKeyDownEvent')) {
+      return; // 프레임워크 버그 → 무시
+    }
+    FlutterError.presentError(details);
+  };
+
   await windowManager.ensureInitialized();
   const windowOptions = WindowOptions(
     size: Size(1280, 800),

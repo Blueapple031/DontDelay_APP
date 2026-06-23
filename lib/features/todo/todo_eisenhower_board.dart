@@ -573,10 +573,10 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
       child: IgnorePointer(
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xFF6D28D9).withOpacity(0.10),
+            color: const Color(0xFF1F2937).withOpacity(0.10),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color(0xFF6D28D9).withOpacity(0.85),
+              color: const Color(0xFF1F2937).withOpacity(0.85),
               width: 2,
             ),
             boxShadow: const [
@@ -603,7 +603,7 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                       style: TextStyle(
                         fontSize: (13 * textScale).clamp(7.5, 14),
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF6D28D9),
+                        color: const Color(0xFF1F2937),
                       ),
                     ),
                   ),
@@ -717,7 +717,7 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6D28D9),
+                  color: const Color(0xFF1F2937),
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: const [
                     BoxShadow(
@@ -1170,10 +1170,10 @@ class _TodoEisenhowerBoardState extends ConsumerState<TodoEisenhowerBoard>
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: overPlotHighlight
-                                    ? const Color(0xFF6D28D9)
+                                    ? const Color(0xFF1F2937)
                                         .withValues(alpha: 0.55)
                                     : plotDragging
-                                        ? const Color(0xFF6D28D9)
+                                        ? const Color(0xFF1F2937)
                                             .withValues(alpha: 0.28)
                                         : Colors.grey.shade300,
                                 width:
