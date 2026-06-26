@@ -97,35 +97,23 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           orElse: () => <TodoItem>[],
         );
 
-    debugPrint('[Alarm] check at $now — ${todos.length} todos');
-
-    // 타이머 드리프트로 정확한 분을 놓칠 수 있으므로
-    // "오늘 알람 시각이 지금으로부터 2분 이내에 있으면" 발동
     final twoMinsAgo = now.subtract(const Duration(minutes: 2));
 
     for (final task in todos) {
       if (task.alarmTime == null) continue;
-      debugPrint('[Alarm] task "${task.title}" alarmTime=${task.alarmTime}');
-      if (_shownAlarmsToday.contains(task.id)) {
-        debugPrint('[Alarm]   → already shown today, skip');
-        continue;
-      }
+      if (_shownAlarmsToday.contains(task.id)) continue;
 
       try {
         final alarmDt = DateTime.parse(task.alarmTime!);
-        debugPrint('[Alarm]   → parsed=$alarmDt  now=$now  twoMinsAgo=$twoMinsAgo');
         if (alarmDt.year == today.year &&
             alarmDt.month == today.month &&
             alarmDt.day == today.day &&
             !alarmDt.isAfter(now) &&
             alarmDt.isAfter(twoMinsAgo)) {
-          debugPrint('[Alarm]   → FIRING popup!');
           _shownAlarmsToday.add(task.id);
           _triggerAlarmPopup(task);
         }
-      } catch (e) {
-        debugPrint('[Alarm]   → parse error: $e');
-      }
+      } catch (_) {}
     }
   }
 
