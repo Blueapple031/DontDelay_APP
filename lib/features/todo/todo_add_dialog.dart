@@ -5,6 +5,7 @@ import '../../core/theme/theme_provider.dart';
 import '../event/event_model.dart';
 import '../event/event_provider.dart';
 import '../event/event_tag_provider.dart';
+import 'alarm_picker_dialog.dart';
 import 'tag_model.dart';
 import 'tag_provider.dart';
 import 'todo_model.dart';
@@ -79,28 +80,16 @@ final _timeSlots = [
       '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}'
 ];
 
-// ─── 알람 계산 ────────────────────────────────────────────────────────────────
+// ─── 알람 레이블 ──────────────────────────────────────────────────────────────
 
-String _buildAlarmAt(DateTime taskDate, int daysOffset, int hour, int min) {
-  final alarm = taskDate.subtract(Duration(days: daysOffset));
-  return '${alarm.year}-${alarm.month.toString().padLeft(2, '0')}-'
-      '${alarm.day.toString().padLeft(2, '0')}T'
-      '${hour.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}';
-}
-
-String _alarmLabel(String? alarmTime, DateTime taskDate) {
+String _alarmLabel(String? alarmTime) {
   if (alarmTime == null) return '알람 없음';
   try {
     final dt = DateTime.parse(alarmTime);
-    final diff = DateTime(taskDate.year, taskDate.month, taskDate.day)
-        .difference(DateTime(dt.year, dt.month, dt.day))
-        .inDays;
-    final timeStr =
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    if (diff == 0) return '당일 $timeStr';
-    if (diff == 1) return '1일 전 $timeStr';
-    if (diff == 7) return '1주일 전';
-    return '$diff일 전 $timeStr';
+    final h = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+    final m = dt.minute.toString().padLeft(2, '0');
+    final period = dt.hour < 12 ? 'AM' : 'PM';
+    return '${dt.month}/${dt.day}  $h:$m $period';
   } catch (_) {
     return alarmTime;
   }
@@ -427,39 +416,13 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
   }
 
   Future<void> _showAlarmMenu() async {
-    final options = [
-      ('알람 없음', null as String?),
-      ('당일 오전 9시', _buildAlarmAt(_date, 0, 9, 0)),
-      ('1일 전 오전 9시', _buildAlarmAt(_date, 1, 9, 0)),
-      ('1주일 전', _buildAlarmAt(_date, 7, 9, 0)),
-    ];
-    final result = await showDialog<String?>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('알람 설정',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
-        children: options
-            .map((o) => SimpleDialogOption(
-                  onPressed: () =>
-                      Navigator.pop(ctx, o.$2 ?? '__none__'),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(o.$1,
-                        style: TextStyle(
-                          fontWeight: (_alarmTime == o.$2)
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        )),
-                  ),
-                ))
-            .toList(),
-      ),
+    final result = await showAlarmPickerDialog(
+      context,
+      taskDate: _date,
+      initialAlarmTime: _alarmTime,
     );
     if (result != null && mounted) {
-      setState(() =>
-          _alarmTime = result == '__none__' ? null : result);
+      setState(() => _alarmTime = result);
     }
   }
 
@@ -658,11 +621,19 @@ class _UnifiedDialogState extends ConsumerState<_UnifiedDialog> {
               // ── 알람 ──────────────────────────────────────────
               _buildRow(
                 icon: Icons.notifications_none_outlined,
-                label: _alarmLabel(_alarmTime, _date),
+                label: _alarmLabel(_alarmTime),
                 labelColor: _alarmTime == null
                     ? cs.onSurfaceVariant
                     : cs.onSurface,
                 onTap: _showAlarmMenu,
+                trailing: _alarmTime != null
+                    ? GestureDetector(
+                        onTap: () => setState(() => _alarmTime = null),
+                        child: Icon(Icons.close,
+                            size: 16,
+                            color: cs.onSurface.withValues(alpha: 0.4)),
+                      )
+                    : null,
               ),
               Divider(height: 1, color: cs.outlineVariant),
               const SizedBox(height: 12),
@@ -880,9 +851,7 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
 
   @override
   void dispose() {
-    for (final c in _nameCtls.values) {
-      c.dispose();
-    }
+    for (final c in _nameCtls.values) c.dispose();
     _newNameCtl.dispose();
     super.dispose();
   }
@@ -994,14 +963,14 @@ class _TagEditDialogState extends ConsumerState<_TagEditDialog> {
               ...tags.map((tag) => _buildTagRow(tag, cs)),
               const SizedBox(height: 4),
               if (_addingNew) _buildNewTagRow(cs),
-              TextButton.icon(
+              if (!_addingNew) TextButton.icon(
                 onPressed: () => setState(() {
                   _addingNew = true;
                   _editingId = null;
                   _newColor = TagItem.defaultColorFor(theme);
                 }),
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('+ 태그 추가'),
+                label: const Text('태그 추가'),
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF374151),
                 ),

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/theme/theme_provider.dart';
 import '../features/todo/todo_add_dialog.dart';
 import '../features/todo/todo_model.dart';
 import '../features/todo/todo_provider.dart';
@@ -51,10 +50,6 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     {'title': '마이페이지', 'icon': Icons.person_outline, 'path': '/mypage'},
   ];
 
-  static const _themeSwatches = {
-    AppThemeType.classicGray: Color(0xFF6B7280),
-    AppThemeType.limeCoral: Color(0xFFC3DC68),
-  };
 
   // ── 알람 상태 ──────────────────────────────────────────────────────
   Timer? _alarmTimer;
@@ -62,14 +57,14 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   DateTime? _lastCheckDate;
   bool _showNotificationPanel = false;
   int _unreadCount = 0;
-  OverlayEntry? _alarmPopupEntry;
+  TodoItem? _popupTask;
 
 
   @override
   void initState() {
     super.initState();
     _alarmTimer = Timer.periodic(
-      const Duration(minutes: 1),
+      const Duration(seconds: 30),
       (_) => _checkAlarms(),
     );
     // 약간 지연 후 초기 체크 (providers 로드 기다림)
@@ -79,7 +74,6 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   @override
   void dispose() {
     _alarmTimer?.cancel();
-    _alarmPopupEntry?.remove();
     super.dispose();
   }
 
@@ -88,10 +82,13 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   void _checkAlarms() {
     if (!mounted) return;
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
-    // 날짜 바뀌면 shown 초기화
-    if (_lastCheckDate != null && _lastCheckDate!.day != now.day) {
-      _shownAlarmsToday.clear();
+    // 날짜가 바뀌면 표시 이력 초기화 (연·월·일 모두 비교)
+    if (_lastCheckDate != null) {
+      final lastDay = DateTime(
+          _lastCheckDate!.year, _lastCheckDate!.month, _lastCheckDate!.day);
+      if (lastDay != today) _shownAlarmsToday.clear();
     }
     _lastCheckDate = now;
 
@@ -100,88 +97,46 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           orElse: () => <TodoItem>[],
         );
 
+    debugPrint('[Alarm] check at $now — ${todos.length} todos');
+
+    // 타이머 드리프트로 정확한 분을 놓칠 수 있으므로
+    // "오늘 알람 시각이 지금으로부터 2분 이내에 있으면" 발동
+    final twoMinsAgo = now.subtract(const Duration(minutes: 2));
+
     for (final task in todos) {
       if (task.alarmTime == null) continue;
-      if (_shownAlarmsToday.contains(task.id)) continue;
+      debugPrint('[Alarm] task "${task.title}" alarmTime=${task.alarmTime}');
+      if (_shownAlarmsToday.contains(task.id)) {
+        debugPrint('[Alarm]   → already shown today, skip');
+        continue;
+      }
 
       try {
         final alarmDt = DateTime.parse(task.alarmTime!);
-        if (alarmDt.year == now.year &&
-            alarmDt.month == now.month &&
-            alarmDt.day == now.day &&
-            alarmDt.hour == now.hour &&
-            alarmDt.minute == now.minute) {
+        debugPrint('[Alarm]   → parsed=$alarmDt  now=$now  twoMinsAgo=$twoMinsAgo');
+        if (alarmDt.year == today.year &&
+            alarmDt.month == today.month &&
+            alarmDt.day == today.day &&
+            !alarmDt.isAfter(now) &&
+            alarmDt.isAfter(twoMinsAgo)) {
+          debugPrint('[Alarm]   → FIRING popup!');
           _shownAlarmsToday.add(task.id);
           _triggerAlarmPopup(task);
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[Alarm]   → parse error: $e');
+      }
     }
   }
 
   void _triggerAlarmPopup(TodoItem task) {
     if (!mounted) return;
-    _alarmPopupEntry?.remove();
-
-    setState(() => _unreadCount++);
-
-    _alarmPopupEntry = OverlayEntry(builder: (ctx) {
-      return Positioned(
-        bottom: 24,
-        right: 24,
-        child: Material(
-          elevation: 12,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 300,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1F2937),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.alarm, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('마감 알림',
-                          style: TextStyle(
-                              color: Colors.white70, fontSize: 11)),
-                      const SizedBox(height: 2),
-                      Text(task.title,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close,
-                      color: Colors.white70, size: 16),
-                  onPressed: () {
-                    _alarmPopupEntry?.remove();
-                    _alarmPopupEntry = null;
-                  },
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+    setState(() {
+      _unreadCount++;
+      _popupTask = task;
     });
-
-    Overlay.of(context).insert(_alarmPopupEntry!);
-
-    // 5초 후 자동 닫힘
-    Future.delayed(const Duration(seconds: 5), () {
-      _alarmPopupEntry?.remove();
-      _alarmPopupEntry = null;
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted) setState(() => _popupTask = null);
     });
   }
 
@@ -233,17 +188,15 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final currentTheme = ref.watch(themeProvider).maybeWhen(
-          data: (t) => t,
-          orElse: () => AppThemeType.classicGray,
-        );
     final todos = ref.watch(todoListProvider).maybeWhen(
           data: (list) => list,
           orElse: () => <TodoItem>[],
         );
     final alarmNotes = _buildAlarmNotes(todos);
 
-    return Scaffold(
+    return Stack(
+      children: [
+        Scaffold(
       body: Row(
         children: [
           // ── 사이드바 ──────────────────────────────────────────────
@@ -352,66 +305,6 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                 if (_showNotificationPanel)
                   _buildNotificationPanel(alarmNotes, cs),
 
-                // ── 테마 스위처 ────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Divider(color: cs.outlineVariant, height: 1),
-                      const SizedBox(height: 14),
-                      Text('테마',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: cs.onSurfaceVariant,
-                              letterSpacing: 0.5)),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: AppThemeType.values.map((type) {
-                          final isActive = type == currentTheme;
-                          final swatchColor = _themeSwatches[type]!;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: Tooltip(
-                              message: type.label,
-                              child: GestureDetector(
-                                onTap: () => ref
-                                    .read(themeProvider.notifier)
-                                    .setTheme(type),
-                                child: AnimatedContainer(
-                                  duration:
-                                      const Duration(milliseconds: 200),
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: swatchColor,
-                                    shape: BoxShape.circle,
-                                    border: isActive
-                                        ? Border.all(
-                                            color: cs.onSurface, width: 2)
-                                        : Border.all(
-                                            color: Colors.transparent,
-                                            width: 2),
-                                    boxShadow: isActive
-                                        ? [
-                                            BoxShadow(
-                                              color: swatchColor
-                                                  .withValues(alpha: 0.4),
-                                              blurRadius: 6,
-                                              spreadRadius: 1,
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
@@ -424,6 +317,56 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             child: ColoredBox(color: cs.surface, child: widget.child),
           ),
         ],
+      ),
+        ),
+        if (_popupTask != null)
+          Positioned(
+            bottom: 24,
+            right: 24,
+            child: _buildAlarmPopup(_popupTask!),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAlarmPopup(TodoItem task) {
+    return Material(
+      elevation: 12,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 400,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1F2937),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.alarm, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            SizedBox(
+              width: 320,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('마감 알림',
+                      style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  const SizedBox(height: 2),
+                  Text(task.title,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _popupTask = null),
+              child: const Icon(Icons.close, color: Colors.white70, size: 16),
+            ),
+          ],
+        ),
       ),
     );
   }

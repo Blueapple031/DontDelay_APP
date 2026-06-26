@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/view_mode_providers.dart';
 import '../event/event_model.dart';
 import '../event/event_provider.dart';
 import '../event/event_tag_provider.dart';
@@ -34,13 +33,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _focusedDate;
   late final DateTime _today;
 
-  // 멀티셀렉
-  final Set<String> _selectedTaskIds = {};
-  // ctrl+클릭 이동 모드
-  bool _isMoveMode = false;
-  // 드래그 상태
-  bool _isDragging = false;
-
   // +more 오버플로 팝업
   OverlayEntry? _overflowEntry;
   Timer? _hoverTimer;
@@ -48,9 +40,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   // 드래그 중 쓰레기통
   OverlayEntry? _trashEntry;
 
-  // ctrl+클릭 이동 오버레이 (커서 추종)
-  Offset _cursorPos = Offset.zero;
-  OverlayEntry? _moveOverlay;
+  // week 가로 스크롤
+  final _weekHScrollCtrl = ScrollController();
 
   @override
   void initState() {
@@ -58,14 +49,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final now = DateTime.now();
     _today = DateTime(now.year, now.month, now.day);
     _focusedDate = _today;
+    _viewMode = ref.read(calendarViewModeProvider) == 1
+        ? _CalViewMode.sevenDays
+        : _CalViewMode.month;
   }
 
   @override
   void dispose() {
     _overflowEntry?.remove();
     _trashEntry?.remove();
-    _moveOverlay?.remove();
     _hoverTimer?.cancel();
+    _weekHScrollCtrl.dispose();
     super.dispose();
   }
 
@@ -87,35 +81,62 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
       data: (allTodos) {
         final events = asyncEvents.value ?? [];
-        return MouseRegion(
-          onHover: (event) {
-            // Overlay 기준 좌표계로 변환
-            final calBox = context.findRenderObject() as RenderBox?;
-            final overlayBox = Overlay.of(context).context.findRenderObject()
-                as RenderBox?;
-            if (calBox != null) {
-              _cursorPos = calBox.localToGlobal(event.localPosition,
-                  ancestor: overlayBox);
-            }
-            if (_isMoveMode && _selectedTaskIds.isNotEmpty) {
-              _moveOverlay?.markNeedsBuild();
-            }
+        return LayoutBuilder(
+          builder: (_, constraints) {
+            // 헤더 최솟값 먼저 확보 → 나머지를 그리드에 할당 (행 최대 140px cap)
+            const headerMinH = 72.0;
+            const weekdayRowH = 32.0;
+            const rowCount = 5;
+            const maxRowH = 140.0;
+            const maxGridH = weekdayRowH + rowCount * maxRowH; // 732
+
+            final availH = constraints.maxHeight - 16;
+            // 여유분(availH - maxGridH)이 헤더 추가 공간, 최소 headerMinH 보장
+            final headerAreaH =
+                (availH - maxGridH).clamp(headerMinH, double.infinity);
+            // gridH = 나머지 — headerAreaH + gridH = availH 항상 성립
+            final gridH = availH - headerAreaH;
+
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+              child: _viewMode == _CalViewMode.month
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // 헤더: 확보된 공간 안에서 수직 중앙 정렬
+                        SizedBox(
+                          height: headerAreaH,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [_buildHeader()],
+                          ),
+                        ),
+                        // 그리드: 딱 맞는 높이
+                        SizedBox(
+                          height: gridH,
+                          child: _buildMonthView(
+                              allTodos, events, tagMap, eventTagMap),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(
+                          height: headerAreaH,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [_buildHeader()],
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildSevenDaysView(
+                              allTodos, events, tagMap, eventTagMap),
+                        ),
+                      ],
+                    ),
+            );
           },
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: _viewMode == _CalViewMode.month
-                      ? _buildMonthView(allTodos, events, tagMap, eventTagMap)
-                      : _buildSevenDaysView(allTodos, events, tagMap, eventTagMap),
-                ),
-              ],
-            ),
-          ),
         );
       },
     );
@@ -171,8 +192,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           ],
           selected: {_viewMode},
-          onSelectionChanged: (s) =>
-              setState(() => _viewMode = s.first),
+          onSelectionChanged: (s) {
+            setState(() => _viewMode = s.first);
+            ref.read(calendarViewModeProvider.notifier)
+                .set(_viewMode == _CalViewMode.sevenDays ? 1 : 0);
+          },
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.resolveWith(
               (st) => st.contains(WidgetState.selected)
