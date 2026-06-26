@@ -226,13 +226,16 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
     );
   }
 
-  void _showAddRetrospectiveDialog(Color themeColor, Color themeColorLight) async {
-    final titleController = TextEditingController();
-    final contentController = TextEditingController();
-    final tagsController = TextEditingController();
-    String selectedEmoji = '😊';
+  void _showAddRetrospectiveDialog(Color themeColor, Color themeColorLight,
+      {RetrospectiveItem? existing}) async {
+    final isEditing = existing != null;
+    final titleController = TextEditingController(text: existing?.title ?? '');
+    final contentController = TextEditingController(text: existing?.content ?? '');
+    final tagsController = TextEditingController(text: existing?.tags.join(', ') ?? '');
+    String selectedEmoji = existing?.emoji ?? '😊';
     final now = DateTime.now();
-    final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final dateStr = existing?.date ??
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     final result = await showDialog<RetrospectiveItem?>(
       context: context,
@@ -259,9 +262,9 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                '새 회고 작성',
-                                style: TextStyle(
+                              Text(
+                                isEditing ? '회고 수정' : '새 회고 작성',
+                                style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black87,
@@ -270,7 +273,7 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '$dateStr · 오늘의 성장 기록',
+                                isEditing ? '$dateStr · 수정 중' : '$dateStr · 오늘의 성장 기록',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade500,
@@ -491,7 +494,7 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                               Navigator.pop(
                                 ctx,
                                 RetrospectiveItem(
-                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                  id: existing?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
                                   date: dateStr,
                                   emoji: selectedEmoji,
                                   title: title,
@@ -506,9 +509,9 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                               elevation: 0,
                             ),
-                            child: const Text(
-                              '회고 저장',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            child: Text(
+                              isEditing ? '수정 완료' : '회고 저장',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -525,7 +528,12 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
 
     if (result != null) {
       setState(() {
-        _retrospectives.insert(0, result);
+        if (isEditing) {
+          final idx = _retrospectives.indexWhere((r) => r.id == result.id);
+          if (idx != -1) _retrospectives[idx] = result;
+        } else {
+          _retrospectives.insert(0, result);
+        }
       });
       _service.saveRetrospectives(_retrospectives);
     }
@@ -533,6 +541,8 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
 
   // 회고 상세 보기 다이얼로그
   void _showRetrospectiveDetailDialog(RetrospectiveItem retro, Color tagBg, Color tagText) {
+    final themeColor = Theme.of(context).colorScheme.primary;
+    final themeColorLight = Theme.of(context).colorScheme.primaryContainer;
     showDialog(
       context: context,
       builder: (context) {
@@ -677,22 +687,46 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                   const SizedBox(height: 24),
                 ],
 
-                // 하단 닫기 버튼
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
+                // 하단 버튼
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showAddRetrospectiveDialog(
+                            themeColor, themeColorLight,
+                            existing: retro,
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: themeColor),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Text(
+                          '수정하기',
+                          style: TextStyle(color: themeColor, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
-                    child: const Text(
-                      '확인',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: themeColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          '확인',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -843,6 +877,8 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
     Color tagBg,
     Color tagText,
   ) {
+    final themeColor = Theme.of(context).colorScheme.primary;
+    final themeColorLight = Theme.of(context).colorScheme.primaryContainer;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -946,7 +982,26 @@ class _RetrospectiveScreenState extends State<RetrospectiveScreen> {
                     }).toList(),
                   ),
                 const SizedBox(width: 16),
-                // 4. 삭제 버튼
+                // 4. 수정 버튼
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  style: ButtonStyle(
+                    foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(WidgetState.hovered)) return themeColor;
+                      return Colors.grey.shade400;
+                    }),
+                    overlayColor: WidgetStateProperty.all(themeColor.withValues(alpha: 0.06)),
+                  ),
+                  onPressed: () => _showAddRetrospectiveDialog(
+                    themeColor, themeColorLight,
+                    existing: retrospective,
+                  ),
+                  tooltip: '회고 수정',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 8),
+                // 5. 삭제 버튼
                 IconButton(
                   icon: const Icon(Icons.delete_outline, size: 18),
                   style: ButtonStyle(

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'coming_soon_overlay.dart';
-
 class ExamModeScreen extends StatefulWidget {
   const ExamModeScreen({super.key});
 
@@ -16,9 +14,8 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return ComingSoonOverlay(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
+    return Padding(
+      padding: const EdgeInsets.all(40.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -298,7 +295,6 @@ class _ExamModeScreenState extends State<ExamModeScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 

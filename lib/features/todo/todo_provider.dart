@@ -94,6 +94,63 @@ class TodoListNotifier extends AsyncNotifier<List<TodoItem>> {
     }
   }
 
+  // ── 동적 반복 렌더링용 override 메서드 ──────────────────────────────
+
+  /// 반복 task 의 특정 날짜 done 토글.
+  Future<void> toggleDoneOverride(String id, String dateKey) async {
+    final previous = List<TodoItem>.from(_currentList());
+    final updated = previous.map((t) {
+      if (t.id != id) return t;
+      final newDone = Set<String>.from(t.doneOverrides);
+      if (newDone.contains(dateKey)) {
+        newDone.remove(dateKey);
+      } else {
+        newDone.add(dateKey);
+      }
+      return t.copyWith(doneOverrides: newDone);
+    }).toList();
+    state = AsyncData<List<TodoItem>>(updated);
+    try {
+      await _service.saveTodos(updated);
+    } catch (e, st) {
+      state = AsyncData<List<TodoItem>>(previous);
+      Error.throwWithStackTrace(e, st);
+    }
+  }
+
+  /// 반복 task 의 특정 날짜만 삭제 (이 일정만 삭제).
+  Future<void> addDeletedOverride(String id, String dateKey) async {
+    final previous = List<TodoItem>.from(_currentList());
+    final updated = previous.map((t) {
+      if (t.id != id) return t;
+      final newDeleted = Set<String>.from(t.deletedOverrides)..add(dateKey);
+      return t.copyWith(deletedOverrides: newDeleted);
+    }).toList();
+    state = AsyncData<List<TodoItem>>(updated);
+    try {
+      await _service.saveTodos(updated);
+    } catch (e, st) {
+      state = AsyncData<List<TodoItem>>(previous);
+      Error.throwWithStackTrace(e, st);
+    }
+  }
+
+  /// 반복 task 를 특정 날짜 이후로 모두 종료 (이후 모든 일정 삭제).
+  Future<void> setRepeatEndDate(String id, String endDate) async {
+    final previous = List<TodoItem>.from(_currentList());
+    final updated = previous.map((t) {
+      if (t.id != id) return t;
+      return t.copyWith(repeatEndDate: endDate);
+    }).toList();
+    state = AsyncData<List<TodoItem>>(updated);
+    try {
+      await _service.saveTodos(updated);
+    } catch (e, st) {
+      state = AsyncData<List<TodoItem>>(previous);
+      Error.throwWithStackTrace(e, st);
+    }
+  }
+
   Future<void> updateUrgencyImportance(
     String id,
     int urgency,

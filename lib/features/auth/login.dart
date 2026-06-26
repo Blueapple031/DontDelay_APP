@@ -86,7 +86,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // App icon
                       Center(
                         child: Container(
                           width: 68,
@@ -107,7 +106,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Title
                       Text(
                         'DontDelay',
                         style: Theme.of(context).textTheme.headlineLarge!.copyWith(

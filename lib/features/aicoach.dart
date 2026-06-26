@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'coming_soon_overlay.dart';
-
 class AiCoachScreen extends StatelessWidget {
   const AiCoachScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ComingSoonOverlay(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
+    return Padding(
+      padding: const EdgeInsets.all(40.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -166,7 +163,6 @@ class AiCoachScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
