@@ -1,5 +1,18 @@
 part of 'calender.dart';
 
+// ── 드래그 데이터 래퍼 — 인스턴스 날짜 포함 ──────────────────────────────────
+class _TodoDragData {
+  final TodoItem todo;
+  final String instanceDate; // "yyyy-MM-dd"
+  const _TodoDragData(this.todo, this.instanceDate);
+}
+
+class _EventDragData {
+  final EventItem event;
+  final String instanceDate; // "yyyy-MM-dd"
+  const _EventDragData(this.event, this.instanceDate);
+}
+
 // ── 이름(왼쪽) + 시간(오른쪽) 레이아웃 위젯 ─────────────────────────────────
 // 시간이 있을 때: 오른쪽 고정, 이름 왼쪽 잘림.
 // 호버 시 이름이 왼쪽으로 천천히 스크롤되어 전체 이름 확인 가능.
@@ -22,16 +35,39 @@ class _TitleTimeRowState extends State<_TitleTimeRow>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _curve;
+  bool _shouldAnimate = false;
+  final _clipKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 2500),
     );
-    // CurvedAnimation을 한 번만 생성 (매 프레임 생성 방지)
     _curve = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOverflow());
+  }
+
+  @override
+  void didUpdateWidget(_TitleTimeRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.title != widget.title || oldWidget.time != widget.time) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkOverflow());
+    }
+  }
+
+  // 제목 텍스트가 시간 영역에 가려지는지 측정 — 가려질 때만 애니메이션 허용
+  void _checkOverflow() {
+    if (!mounted || widget.time == null) return;
+    final box = _clipKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final painter = TextPainter(
+      text: TextSpan(text: widget.title, style: widget.titleStyle),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout(maxWidth: double.infinity);
+    if (mounted) setState(() => _shouldAnimate = painter.width > box.size.width);
   }
 
   @override
@@ -42,7 +78,6 @@ class _TitleTimeRowState extends State<_TitleTimeRow>
 
   @override
   Widget build(BuildContext context) {
-    // 시간 없으면 단순 truncated 텍스트
     if (widget.time == null) {
       return Text(
         widget.title,
@@ -59,14 +94,13 @@ class _TitleTimeRowState extends State<_TitleTimeRow>
     );
 
     return MouseRegion(
-      onEnter: (_) => _ctrl.forward(from: 0),
-      onExit: (_) => _ctrl.reverse(),
+      onEnter: (_) { if (_shouldAnimate) _ctrl.forward(from: 0); },
+      onExit: (_) { if (_shouldAnimate) _ctrl.reverse(); },
       child: Row(
         children: [
-          // 이름: 남은 공간에서 잘림, 호버 시 80px 왼쪽 스크롤.
-          // LayoutBuilder 대신 고정 스크롤 사용 — IntrinsicHeight 내부 호환
           Expanded(
             child: ClipRect(
+              key: _clipKey,
               child: AnimatedBuilder(
                 animation: _curve,
                 builder: (_, child) => Transform.translate(
@@ -84,7 +118,6 @@ class _TitleTimeRowState extends State<_TitleTimeRow>
             ),
           ),
           const SizedBox(width: 3),
-          // 시간: 우선순위로 오른쪽 고정
           Text(widget.time!, style: timeStyle),
         ],
       ),
@@ -181,16 +214,46 @@ extension _CalendarMonthView on _CalendarScreenState {
   }) {
     final cs = Theme.of(context).colorScheme;
     final dateKey = _fmtKey(date);
-    final totalCount = todos.length + events.length;
 
-    // EventItem 드롭 처리
-    Future<void> handleEventDrop(EventItem event) async {
+    // 이벤트+할일 통합 리스트 — 시간 있는 항목 우선(시간순), 나머지는 추가순 유지
+    final allItems = <({bool isEvent, Object data, String? time})>[
+      for (final e in events) (isEvent: true, data: e, time: e.time),
+      for (final t in todos) (isEvent: false, data: t, time: t.time),
+    ];
+    allItems.sort((a, b) {
+      if (a.time != null && b.time != null) return a.time!.compareTo(b.time!);
+      if (a.time != null) return -1;
+      if (b.time != null) return 1;
+      return 0;
+    });
+    final shownItems = allItems.take(4).toList();
+    final hiddenCount = allItems.length - shownItems.length;
+
+    // EventItem 드롭 처리 — 반복 일정은 해당 인스턴스만 이동
+    Future<void> handleEventDrop(_EventDragData payload) async {
+      final event = payload.event;
+      final instanceDate = payload.instanceDate;
       final newDate = _fmtKey(date);
-      if (event.date == newDate && event.repeat == RepeatType.none) return;
+      if (instanceDate == newDate) return;
       try {
-        await ref
-            .read(eventListProvider.notifier)
-            .updateEvent(event.copyWith(date: newDate));
+        if (event.repeat == RepeatType.none) {
+          await ref
+              .read(eventListProvider.notifier)
+              .updateEvent(event.copyWith(date: newDate));
+        } else {
+          await ref
+              .read(eventListProvider.notifier)
+              .addDeletedOverride(event.id, instanceDate);
+          await ref.read(eventListProvider.notifier).addEvent(EventItem(
+                title: event.title,
+                date: newDate,
+                time: event.time,
+                memo: event.memo,
+                tag: event.tag,
+                repeat: RepeatType.none,
+                alarmTime: event.alarmTime,
+              ));
+        }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context)
@@ -198,45 +261,51 @@ extension _CalendarMonthView on _CalendarScreenState {
       }
     }
 
-    return DragTarget<EventItem>(
+    return DragTarget<_EventDragData>(
       onWillAcceptWithDetails: (_) => true,
       onAcceptWithDetails: (d) => handleEventDrop(d.data),
       builder: (_, eventCandidates, __) {
-        return DragTarget<TodoItem>(
+        return DragTarget<_TodoDragData>(
           onWillAcceptWithDetails: (_) => true,
           onAcceptWithDetails: (details) async {
             _hideTrashOverlay();
+            final payload = details.data;
+            final task = payload.todo;
+            final instanceDate = payload.instanceDate;
             final newDate = _fmtKey(date);
-            final allTodos = ref.read(todoListProvider).value ?? [];
-            final tasksToDrop = _selectedTaskIds.isNotEmpty &&
-                    _selectedTaskIds.contains(details.data.id)
-                ? allTodos
-                    .where((t) => _selectedTaskIds.contains(t.id))
-                    .toList()
-                : [details.data];
-            for (final task in tasksToDrop) {
-              if (task.date == newDate &&
-                  task.repeat == RepeatType.none) continue;
-              try {
+            if (instanceDate == newDate) return;
+            try {
+              if (task.repeat == RepeatType.none) {
                 await ref
                     .read(todoListProvider.notifier)
                     .updateTodo(task.copyWith(date: newDate));
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('저장에 실패했습니다: $e')));
+              } else {
+                await ref
+                    .read(todoListProvider.notifier)
+                    .addDeletedOverride(task.id, instanceDate);
+                await ref.read(todoListProvider.notifier).addTodo(TodoItem(
+                      title: task.title,
+                      date: newDate,
+                      priority: task.priority,
+                      tag: task.tag,
+                      status: TodoStatus.todo,
+                      time: task.time,
+                      memo: task.memo,
+                      repeat: RepeatType.none,
+                      alarmTime: task.alarmTime,
+                    ));
               }
+            } catch (e) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('저장에 실패했습니다: $e')));
             }
-            setState(() => _selectedTaskIds.clear());
           },
           builder: (cellCtx, todoCandidates, _) {
             final isHovering =
                 todoCandidates.isNotEmpty || eventCandidates.isNotEmpty;
-            final cursor = _isMoveMode && _selectedTaskIds.isNotEmpty
-                ? SystemMouseCursors.move
-                : SystemMouseCursors.click;
             return MouseRegion(
-              cursor: cursor,
+              cursor: SystemMouseCursors.click,
               child: Builder(
                 builder: (builderCtx) => GestureDetector(
                   behavior: HitTestBehavior.translucent,
@@ -246,9 +315,7 @@ extension _CalendarMonthView on _CalendarScreenState {
                     decoration: BoxDecoration(
                       color: isHovering
                           ? cs.primaryContainer.withValues(alpha: 0.35)
-                          : _isMoveMode && _selectedTaskIds.isNotEmpty
-                              ? cs.primaryContainer.withValues(alpha: 0.08)
-                              : Colors.transparent,
+                          : Colors.transparent,
                       border: Border(
                         right: BorderSide(color: Colors.grey.shade200),
                         bottom: BorderSide(color: Colors.grey.shade200),
@@ -288,18 +355,18 @@ extension _CalendarMonthView on _CalendarScreenState {
                                         : Colors.grey.shade400,
                                   )),
                         ),
-                        // 이벤트 (최대 1개)
-                        ...events
-                            .take(1)
-                            .map((e) =>
-                                _buildEventBlock(e, cs, eventTagMap)),
-                        // task (이벤트 없으면 4개, 있으면 3개)
-                        ...todos
-                            .take(events.isEmpty ? 4 : 3)
-                            .map((t) => _buildMonthBlock(t, tagMap, date,
-                                isDone: t.isDoneOnDate(dateKey))),
-                        // +more
-                        if (totalCount > 4)
+                        // 이벤트+할일 통합 표시 (최대 4개, 시간순 우선)
+                        ...shownItems.map((entry) {
+                          if (entry.isEvent) {
+                            return _buildEventBlock(
+                                entry.data as EventItem, cs, eventTagMap, date);
+                          }
+                          final t = entry.data as TodoItem;
+                          return _buildMonthBlock(t, tagMap, date,
+                              isDone: t.isDoneOnDate(dateKey));
+                        }),
+                        // +more: 실제로 숨겨진 항목 수 기준
+                        if (hiddenCount > 0)
                           MouseRegion(
                             cursor: SystemMouseCursors.click,
                             onEnter: (_) => _scheduleOverflowPopup(
@@ -313,7 +380,7 @@ extension _CalendarMonthView on _CalendarScreenState {
                                 padding:
                                     const EdgeInsets.fromLTRB(5, 1, 5, 2),
                                 child: Text(
-                                  '+${totalCount - 4} more',
+                                  '+$hiddenCount more',
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.grey.shade500,
@@ -344,7 +411,6 @@ extension _CalendarMonthView on _CalendarScreenState {
     final tag = tagMap[todo.tag] ?? TagItem.defaultTag;
     final color = hexToColor(tag.colorHex);
     final dateKey = _fmtKey(date);
-    final isSelected = _selectedTaskIds.contains(todo.id);
 
     final titleStyle = TextStyle(
       fontSize: 11,
@@ -363,15 +429,6 @@ extension _CalendarMonthView on _CalendarScreenState {
         border: Border(
           left: BorderSide(
               color: color.withValues(alpha: isDone ? 0.4 : 1), width: 2.5),
-          top: isSelected
-              ? const BorderSide(color: Color(0xFF1F2937), width: 1)
-              : BorderSide.none,
-          right: isSelected
-              ? const BorderSide(color: Color(0xFF1F2937), width: 1)
-              : BorderSide.none,
-          bottom: isSelected
-              ? const BorderSide(color: Color(0xFF1F2937), width: 1)
-              : BorderSide.none,
         ),
       ),
       child: Row(
@@ -410,15 +467,7 @@ extension _CalendarMonthView on _CalendarScreenState {
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (HardwareKeyboard.instance.isControlPressed) {
-                  _toggleSelect(todo.id);
-                } else {
-                  _clearSelect();
-                  showTodoEditDialog(context, ref, todo,
-                      instanceDate: date);
-                }
-              },
+              onTap: () => showTodoEditDialog(context, ref, todo, instanceDate: date),
               child: _TitleTimeRow(
                 title: todo.title,
                 time: todo.time,
@@ -430,19 +479,15 @@ extension _CalendarMonthView on _CalendarScreenState {
       ),
     );
 
-    final isMultiSelected = isSelected && _selectedTaskIds.length > 1;
-
     return MouseRegion(
       cursor: SystemMouseCursors.grab,
-      child: Draggable<TodoItem>(
-        data: todo,
+      child: Draggable<_TodoDragData>(
+        data: _TodoDragData(todo, _fmtKey(date)),
         onDragStarted: _showTrashOverlay,
         onDragEnd: (_) => _hideTrashOverlay(),
-        feedback: isMultiSelected
-            ? _buildStackedFeedback(todo.title, _selectedTaskIds.length, color)
-            : _buildDragFeedback(todo.title, color),
+        feedback: _buildDragFeedback(todo.title, color),
         childWhenDragging: Opacity(opacity: 0.4, child: blockContent),
-        child: (_isMoveMode || _isDragging) && isSelected ? Opacity(opacity: 0.4, child: blockContent) : blockContent,
+        child: blockContent,
       ),
     );
   }
@@ -452,28 +497,41 @@ extension _CalendarMonthView on _CalendarScreenState {
     EventItem event,
     ColorScheme cs,
     Map<String, TagItem> eventTagMap,
+    DateTime instanceDate,
   ) {
     final tag = eventTagMap[event.tag] ?? TagItem.defaultTag;
     final color = hexToColor(tag.colorHex);
-    final isSelected = _selectedTaskIds.contains(event.id);
 
-    final innerContent = Padding(
-      padding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
+    final innerContent = Container(
+      margin: const EdgeInsets.fromLTRB(3, 1, 3, 1),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(4),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 핀: 9px, task 완료토글(11px)과 동일선상
-          Container(
-            width: 9,
-            height: 9,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          // 이벤트 구분 네모 — 할일 동그라미(11px)와 너비 맞춤
+          SizedBox(
+            width: 11,
+            height: 11,
+            child: Center(
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
           Expanded(
             child: _TitleTimeRow(
               title: event.title,
               time: event.time,
-              titleStyle: TextStyle(fontSize: 11, color: cs.onSurface),
+              titleStyle: const TextStyle(fontSize: 11, color: Colors.white),
             ),
           ),
         ],
@@ -482,30 +540,19 @@ extension _CalendarMonthView on _CalendarScreenState {
 
     final blockContent = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (HardwareKeyboard.instance.isControlPressed) {
-          _toggleSelect(event.id);
-        } else {
-          _clearSelect();
-          _showEventDialog(context, existing: event);
-        }
-      },
+      onTap: () => _showEventDialog(context, existing: event),
       child: innerContent,
     );
 
-    final isMultiSelected = isSelected && _selectedTaskIds.length > 1;
-
     return MouseRegion(
       cursor: SystemMouseCursors.grab,
-      child: Draggable<EventItem>(
-        data: event,
+      child: Draggable<_EventDragData>(
+        data: _EventDragData(event, _fmtKey(instanceDate)),
         onDragStarted: _showTrashOverlay,
         onDragEnd: (_) => _hideTrashOverlay(),
-        feedback: isMultiSelected
-            ? _buildStackedFeedback(event.title, _selectedTaskIds.length, color)
-            : _buildDragFeedback(event.title, color),
+        feedback: _buildDragFeedback(event.title, color),
         childWhenDragging: Opacity(opacity: 0.4, child: blockContent),
-        child: (_isMoveMode || _isDragging) && isSelected ? Opacity(opacity: 0.4, child: blockContent) : blockContent,
+        child: blockContent,
       ),
     );
   }

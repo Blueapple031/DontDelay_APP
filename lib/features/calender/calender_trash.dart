@@ -2,7 +2,6 @@ part of 'calender.dart';
 
 extension _CalendarTrash on _CalendarScreenState {
   void _showTrashOverlay() {
-    setState(() => _isDragging = true);
     if (_trashEntry != null) return;
     _trashEntry = OverlayEntry(builder: (_) {
       return Positioned(
@@ -15,8 +14,8 @@ extension _CalendarTrash on _CalendarScreenState {
               final isHover = candidates.isNotEmpty;
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                width: isHover ? 52 : 40,
-                height: isHover ? 52 : 40,
+                width: isHover ? 72 : 56,
+                height: isHover ? 72 : 56,
                 decoration: BoxDecoration(
                   color: isHover
                       ? Colors.red.shade600
@@ -30,15 +29,17 @@ extension _CalendarTrash on _CalendarScreenState {
                   ],
                 ),
                 child: Icon(Icons.delete_outline,
-                    color: Colors.white, size: isHover ? 26 : 20),
+                    color: Colors.white, size: isHover ? 34 : 26),
               );
             },
             onAcceptWithDetails: (details) {
               final data = details.data;
-              if (data is TodoItem) {
-                _handleTrashDrop(data, null);
-              } else if (data is EventItem) {
-                _handleTrashDropEvent(data, null);
+              if (data is _TodoDragData) {
+                _handleTrashDrop(
+                    data.todo, DateTime.tryParse(data.instanceDate));
+              } else if (data is _EventDragData) {
+                _handleTrashDropEvent(
+                    data.event, DateTime.tryParse(data.instanceDate));
               }
             },
           ),
@@ -49,7 +50,6 @@ extension _CalendarTrash on _CalendarScreenState {
   }
 
   void _hideTrashOverlay() {
-    setState(() => _isDragging = false);
     _trashEntry?.remove();
     _trashEntry = null;
   }

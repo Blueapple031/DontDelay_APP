@@ -135,7 +135,7 @@ extension _CalendarOverflow on _CalendarScreenState {
                 shrinkWrap: true,
                 padding: const EdgeInsets.only(bottom: 4),
                 children: [
-                  ...events.map((e) => _buildEventBlock(e, cs, eventTagMap)),
+                  ...events.map((e) => _buildEventBlock(e, cs, eventTagMap, date)),
                   ...todos.map((t) => _buildMonthBlock(
                         t, tagMap, date,
                         isDone: t.isDoneOnDate(dateKey),

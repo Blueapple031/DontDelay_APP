@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/theme_provider.dart';
 import '../todo/tag_model.dart';
 import 'event_tag_service.dart';
 
@@ -13,7 +14,10 @@ class EventTagNotifier extends AsyncNotifier<List<TagItem>> {
   EventTagService get _service => ref.read(eventTagServiceProvider);
 
   @override
-  Future<List<TagItem>> build() => _service.loadTags();
+  Future<List<TagItem>> build() async {
+    final theme = await ref.watch(themeProvider.future);
+    return _service.loadTags(theme);
+  }
 
   List<TagItem> _current() => state.value ?? [TagItem.defaultTag];
 

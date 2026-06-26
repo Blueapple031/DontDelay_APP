@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/view_mode_providers.dart';
 import 'tag_model.dart';
 import 'tag_provider.dart';
 import 'todo_add_dialog.dart';
@@ -19,6 +20,14 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   TodoViewMode _viewMode = TodoViewMode.kanban;
   bool _isDragging = false;
   final ValueNotifier<bool> _isOverTrashNotifier = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    _viewMode = ref.read(todoViewModeProvider) == 1
+        ? TodoViewMode.eisenhower
+        : TodoViewMode.kanban;
+  }
 
   @override
   void dispose() {
@@ -82,8 +91,11 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                           ),
                         ],
                         selected: {_viewMode},
-                        onSelectionChanged: (s) =>
-                            setState(() => _viewMode = s.first),
+                        onSelectionChanged: (s) {
+                          setState(() => _viewMode = s.first);
+                          ref.read(todoViewModeProvider.notifier)
+                              .set(_viewMode == TodoViewMode.eisenhower ? 1 : 0);
+                        },
                         style: ButtonStyle(
                           backgroundColor: WidgetStateProperty.resolveWith(
                             (st) => st.contains(WidgetState.selected)
