@@ -10,7 +10,7 @@ import '../features/todo/todo.dart';
 import '../features/calender/calender.dart';
 import '../features/keepurl/keepurl.dart';
 import '../features/retrospective.dart';
-import '../features/exammode.dart';
+import '../features/exammode/exammode.dart';
 import '../features/aicoach.dart';
 import '../features/mypage.dart';
 
