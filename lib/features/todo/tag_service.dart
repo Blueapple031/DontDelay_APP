@@ -85,11 +85,9 @@ class TagService {
   }
 
   TagItem _migrateThemeColor(TagItem tag, AppThemeType theme) {
+    if (tag.id == TagItem.defaultId) return tag;
+
     final normalized = tag.colorHex.toUpperCase();
-    final defaultColor = TagItem.defaultColorFor(theme);
-    if (tag.id == TagItem.defaultId && normalized != defaultColor) {
-      return tag.copyWith(colorHex: defaultColor);
-    }
     final migration = switch (theme) {
       AppThemeType.classicGray => _classicColorMigration,
       AppThemeType.limeCoral => _limeCoralColorMigration,
