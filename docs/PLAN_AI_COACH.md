@@ -17,11 +17,23 @@
 | 백엔드 `POST /api/ai/chat` (스트리밍 없음, 단일 응답) | SSE / WebSocket 스트리밍 응답 |
 | 로그인 사용자만 채팅 가능 | 비로그인 게스트 모드 |
 | 클라이언트가 보내는 **컨텍스트 스냅샷**(할 일 목록) | 서버가 `todos.json`을 직접 읽기 (로컬 파일은 앱에만 있음) |
-| Flutter: 메시지 목록·전송·로딩·에러 UI | AI가 할 일을 **자동 생성·저장** (추천 카드는 표시만, 2차에서 “할 일로 추가”) |
+| Flutter: 메시지 목록·전송·로딩·에러 UI, 추천 카드 완료 처리 | AI가 할 일을 **자동 생성·저장** |
 | 서버 측 대화 **세션 ID** + 최근 N턴 히스토리 | 장기 대화 검색·보내기 |
 | 추천 카드 JSON 스키마 | 캘린더 서버 동기화 (캘린더는 앱 내 더미 → 2차에서 컨텍스트 확장) |
 | Rate limit·타임아웃·에러 코드 표준화 | 다국어(i18n) |
 | 빠른 제안 칩 → 동일 API 호출 | Chrome 확장·로컬 URL API와의 직접 연동 |
+
+---
+
+## 2.1 현재 Flutter 구현 상태
+
+- `feat/ai코치` 브랜치에서 AI 코치 프론트 MVP 구현 완료.
+- [`aicoach.dart`](../lib/features/aicoach.dart)는 정적 목업이 아니라 실제 채팅 상태를 렌더링한다.
+- [`ai_coach_provider.dart`](../lib/features/aicoach/ai_coach_provider.dart)는 메시지 목록, 전송 중 상태, 에러, `sessionId`를 관리한다.
+- [`ai_coach_service.dart`](../lib/features/aicoach/ai_coach_service.dart)는 `POST /api/ai/chat`을 호출한다.
+- 백엔드 API가 아직 없거나 `404`/`501`/`502`/연결 실패가 발생하면 앱 내부 mock 코칭 응답으로 fallback한다.
+- `401`/`400`/`429`/`AI_DISABLED`는 fallback하지 않고 사용자에게 에러로 표시한다.
+- `recommendations[].relatedTodoId`가 있으면 추천 카드 체크 버튼으로 해당 todo를 완료 처리할 수 있다.
 
 ---
 
@@ -119,7 +131,10 @@ Base URL: `http://dontdelay.duckdns.org:8080` (운영 시 HTTPS 권장)
         "urgency": 8,
         "importance": 7,
         "priority": "high",
-        "tag": "전공"
+        "tag": "전공",
+        "time": "14:00",
+        "memo": "선택 필드",
+        "repeat": "daily"
       }
     ],
     "upcomingEvents": []
@@ -137,6 +152,8 @@ Base URL: `http://dontdelay.duckdns.org:8080` (운영 시 HTTPS 권장)
 | `context.todos` | `array` | X | 미완료·오늘 할 일 등 필터링된 목록 |
 | `context.upcomingEvents` | `array` | X | 2차: 캘린더 연동 시 일정 요약 |
 
+현재 Flutter는 `status != done`이고 오늘 삭제 override가 없는 todo를 `context.todos`에 포함한다.
+
 **Response 200**
 
 ```json
@@ -151,6 +168,7 @@ Base URL: `http://dontdelay.duckdns.org:8080` (운영 시 HTTPS 권장)
         "timeRange": "14:30 - 16:00",
         "tag": "마감 임박",
         "tagLevel": "urgent",
+        "reason": "오늘 마감이라 먼저 처리해야 합니다.",
         "relatedTodoId": "uuid-or-null"
       }
     ],
@@ -169,6 +187,7 @@ Base URL: `http://dontdelay.duckdns.org:8080` (운영 시 HTTPS 권장)
 | `reply.recommendations` | 없으면 `[]`. UI 추천 카드용 |
 | `tagLevel` | `urgent` \| `scheduled` \| `review` \| `normal` → 앱에서 색상 매핑 |
 | `relatedTodoId` | 기존 할 일과 연결 시 ID (없으면 `null`) |
+| `reason` | 추천 카드 하단에 표시할 짧은 근거. 선택 필드 |
 | `usage` | (선택) 과금·모니터링용 |
 
 **Error Responses**
@@ -273,19 +292,18 @@ com.dontdelay.ai
 
 ## 7. Flutter 클라이언트 설계
 
-### 7.1 파일 구조 (신규)
+### 7.1 파일 구조 (현재)
 
 ```text
-lib/features/aicoach/
-├── aicoach.dart              # 화면 (기존 파일 이동·리팩터)
-├── chat_message.dart         # role, content, time, recommendations?
-├── coach_recommendation.dart # title, timeRange, tag, tagLevel
-├── ai_coach_service.dart       # Dio POST /api/ai/chat
-├── ai_coach_provider.dart    # Notifier: messages, sessionId, isLoading
-└── ai_context_builder.dart   # todoList → context JSON
+lib/features/
+├── aicoach.dart                       # 화면 UI
+└── aicoach/
+    ├── ai_coach_model.dart            # 메시지, 추천 카드, 상태, 컨텍스트 DTO
+    ├── ai_coach_provider.dart         # Notifier: messages, sessionId, isSending
+    └── ai_coach_service.dart          # Dio POST /api/ai/chat + mock fallback
 ```
 
-- 라우터 [`router.dart`](../lib/core/router.dart) import 경로만 `features/aicoach/aicoach.dart`로 조정.
+- 라우터 [`router.dart`](../lib/core/router.dart)는 기존 `features/aicoach.dart` import를 유지한다.
 
 ### 7.2 `ChatMessage` 모델
 
@@ -297,25 +315,28 @@ lib/features/aicoach/
 | `createdAt` | `DateTime` | 타임스탬프 표시 |
 | `recommendations` | `List<CoachRecommendation>?` | assistant만 |
 
-### 7.3 `AiContextBuilder`
+### 7.3 컨텍스트 스냅샷
 
-- `ref.read(todoListProvider).value`에서 `status != done` 필터.
-- `date`가 오늘 또는 지난 미완료 우선 정렬(urgency/importance 내림차순).
-- 상한: 최대 30건(과도한 토큰 방지).
-- 캘린더: [`calender.dart`](../lib/features/calender.dart)가 로컬 state만 사용 → Phase 4에서 `upcomingEvents` 추가.
+- [`ai_coach_service.dart`](../lib/features/aicoach/ai_coach_service.dart)에서 `AiCoachContextSnapshot`을 생성한다.
+- `ref.read(todoListProvider).value`에서 전달된 todo 중 `status != done` 필터.
+- 오늘 날짜의 `deletedOverrides`에 포함된 반복 todo는 제외.
+- `upcomingEvents`는 현재 빈 배열. 캘린더 연동 시 Phase 4에서 추가.
 
 ### 7.4 `AiCoachService`
 
 ```dart
-Future<ChatReply> send({
+Future<AiCoachSendResult> sendMessage({
   required String message,
+  required List<TodoItem> todos,
   String? sessionId,
-  AiCoachContext? context,
 });
 ```
 
-- `dioProvider` 사용, `receiveTimeout` AI용으로 **60초** 별도 `Options` 또는 AI 전용 Dio clone 권장.
-- `DioException` → `AiCoachException` (code, message) 변환.
+- `dioProvider` 사용.
+- `POST /api/ai/chat` 성공 시 서버 응답을 `AiCoachMessage`로 파싱.
+- `404`/`501`/`502`/연결 실패는 mock 응답 fallback.
+- `401`/`400`/`429`/`AI_DISABLED`는 `AiCoachServiceException`으로 변환해 UI 에러로 표시.
+- AI 전용 60초 타임아웃은 백엔드 API가 준비된 뒤 추가 검토.
 
 ### 7.5 `AiCoachNotifier` (Riverpod)
 
@@ -323,17 +344,17 @@ Future<ChatReply> send({
 |------|------|
 | `messages` | `List<ChatMessage>` |
 | `sessionId` | 서버에서 받은 UUID 유지 |
-| `isLoading` | 전송 중 true, 입력·버튼 비활성 |
+| `isSending` | 전송 중 true, 입력·버튼 비활성 |
 | `lastError` | 스낵바용 |
 
 **`sendMessage(String text)` 흐름**
 
-1. `authProvider` false → early return + 안내.
-2. user 메시지 즉시 append (optimistic UI).
-3. `isLoading = true`.
-4. `AiContextBuilder.build(ref)` + `service.send(...)`.
+1. user 메시지 즉시 append (optimistic UI).
+2. `isSending = true`.
+3. `todoListProvider`의 현재 todo 목록을 `service.sendMessage(...)`에 전달.
+4. 서비스가 컨텍스트 스냅샷 생성 후 `/api/ai/chat` 호출.
 5. assistant append, `sessionId` 갱신.
-6. catch → user 메시지 유지, 에러 스낵바, `isLoading = false`.
+6. catch → user 메시지 유지, 에러 배너 표시, `isSending = false`.
 
 ### 7.6 `aicoach.dart` UI 변경 요약
 
