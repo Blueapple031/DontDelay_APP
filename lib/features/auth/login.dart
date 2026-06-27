@@ -28,10 +28,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
-    final errorMessage = await ref.read(authProvider.notifier).login(
-          username,
-          password,
-        );
+    final errorMessage = await ref
+        .read(authProvider.notifier)
+        .login(username, password);
     setState(() => _isLoading = false);
     if (!mounted) return;
 
@@ -40,9 +39,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errorMessage)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(errorMessage)));
   }
 
   @override
@@ -57,7 +56,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             end: Alignment.bottomRight,
             colors: [
               cs.surface,
-              Color.alphaBlend(cs.primaryContainer.withOpacity(0.25), cs.surface),
+              // ignore: deprecated_member_use
+              Color.alphaBlend(
+                cs.primaryContainer.withOpacity(0.25),
+                cs.surface,
+              ),
               cs.surface,
             ],
           ),
@@ -75,13 +78,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     border: Border.all(color: cs.outlineVariant),
                     boxShadow: [
                       BoxShadow(
+                        // ignore: deprecated_member_use
                         color: cs.shadow.withOpacity(0.07),
                         blurRadius: 32,
                         offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 44),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 44,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -108,10 +115,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 20),
                       Text(
                         'DontDelay',
-                        style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                          fontSize: 28,
-                          color: cs.onSurface,
-                        ),
+                        style: Theme.of(context).textTheme.headlineLarge!
+                            .copyWith(fontSize: 28, color: cs.onSurface),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 6),
@@ -136,8 +141,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         label: '비밀번호',
                         icon: Icons.lock_outline_rounded,
                         obscureText: _obscurePassword,
-                        onToggleObscure: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        onToggleObscure: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                         onSubmitted: (_) => _handleLogin(),
                       ),
                       const SizedBox(height: 28),
@@ -164,9 +170,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 )
                               : Text(
                                   '로그인',
-                                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                    fontSize: 16,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium!
+                                      .copyWith(fontSize: 16),
                                 ),
                         ),
                       ),
@@ -184,9 +191,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 const TextSpan(text: '아직 계정이 없으신가요?  '),
                                 TextSpan(
                                   text: '회원가입',
-                                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                                    color: cs.primary,
-                                  ),
+                                  style: Theme.of(context).textTheme.labelLarge!
+                                      .copyWith(color: cs.primary),
                                 ),
                               ],
                             ),
