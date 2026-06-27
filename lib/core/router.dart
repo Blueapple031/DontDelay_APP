@@ -55,7 +55,7 @@ Page<void> _pageTransition({
 
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
-    initialLocation: '/dashboard',
+    initialLocation: '/login',
     routes: [
       GoRoute(
         path: '/login',
