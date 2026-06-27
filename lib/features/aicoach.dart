@@ -1,289 +1,330 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AiCoachScreen extends StatelessWidget {
+import 'aicoach/ai_coach_model.dart';
+import 'aicoach/ai_coach_provider.dart';
+
+class AiCoachScreen extends ConsumerStatefulWidget {
   const AiCoachScreen({super.key});
 
   @override
+  ConsumerState<AiCoachScreen> createState() => _AiCoachScreenState();
+}
+
+class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
+  final _controller = TextEditingController();
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send([String? text]) async {
+    final message = text ?? _controller.text;
+    if (message.trim().isEmpty) return;
+    _controller.clear();
+    await ref.read(aiCoachProvider.notifier).sendMessage(message);
+    _scrollToBottom();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = ref.watch(aiCoachProvider);
+    final scheme = Theme.of(context).colorScheme;
+
+    ref.listen(aiCoachProvider, (previous, next) {
+      if (previous?.messages.length != next.messages.length) {
+        _scrollToBottom();
+      }
+    });
+
     return Padding(
-      padding: const EdgeInsets.all(40.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. 헤더 영역
-            Row(
-              children: [
-                Icon(
-                  Icons.auto_awesome,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'AI 코치',
-                      style: Theme.of(context).textTheme.headlineLarge!.copyWith(fontSize: 28),
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: scheme.primary, size: 28),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AI 코치',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineLarge?.copyWith(fontSize: 28),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '오늘의 할 일과 우선순위를 바탕으로 다음 행동을 추천합니다',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: scheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '학습 계획과 우선순위를 AI가 추천해드립니다',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.separated(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(24),
+                      itemCount:
+                          state.messages.length + (state.isSending ? 1 : 0),
+                      separatorBuilder: (_, __) => const SizedBox(height: 24),
+                      itemBuilder: (context, index) {
+                        if (index >= state.messages.length) {
+                          return const _TypingMessage();
+                        }
+                        return _ChatMessageBubble(
+                          message: state.messages[index],
+                        );
+                      },
                     ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // 2. 채팅 영역 (메인 컨텐츠)
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.all(24),
-                        children: [
-                          _buildUserMessage(context, '오늘 뭐부터 해야 해?', '14:23'),
-                          const SizedBox(height: 24),
-                          _buildAiMessage(
-                            context: context,
-                            time: '14:23',
-                            content:
-                                '안녕하세요! 오늘의 우선순위를 분석해드릴게요.\n\n'
-                                '현재 상황을 정리하면:\n'
-                                '1. **긴급**: 알고리즘 과제 마감이 오늘 23:59입니다\n'
-                                '2. **중요**: 운영체제 복습이 3일째 밀려있어요 (시험 D-11)\n'
-                                '3. **예정**: 오후 4시 알고리즘 스터디가 있습니다\n\n'
-                                '추천 순서는 다음과 같아요:',
-                            recommendations: [
-                              {
-                                'title': '알고리즘 과제 완성',
-                                'time': '14:30 - 16:00',
-                                'tag': '마감 임박',
-                                'tagColor': Colors.red,
-                              },
-                              {
-                                'title': '알고리즘 스터디 참여',
-                                'time': '16:00 - 17:30',
-                                'tag': '예정된 일정',
-                                'tagColor': Colors.blue,
-                              },
-                              {
-                                'title': '운영체제 3단원 복습',
-                                'time': '18:00 - 18:30',
-                                'tag': '복습 지연',
-                                'tagColor': Colors.orange,
-                              },
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 1, color: Color(0xFFEEEEEE)),
-
-                    // 3. 입력창 및 빠른 제안 칩
+                  ),
+                  if (state.errorMessage != null)
                     Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    hintText: 'AI 코치에게 질문하기...',
-                                    hintStyle: TextStyle(
-                                      color: Colors.grey.shade400,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                      child: _ErrorBanner(message: state.errorMessage!),
+                    ),
+                  Divider(height: 1, color: scheme.outlineVariant),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _controller,
+                                minLines: 1,
+                                maxLines: 4,
+                                textInputAction: TextInputAction.send,
+                                onSubmitted: state.isSending
+                                    ? null
+                                    : (_) => _send(),
+                                decoration: InputDecoration(
+                                  hintText: 'AI 코치에게 질문하기...',
+                                  hintStyle: TextStyle(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              ElevatedButton(
-                                onPressed: () {},
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            SizedBox(
+                              height: 54,
+                              width: 54,
+                              child: FilledButton(
+                                onPressed: state.isSending
+                                    ? null
+                                    : () => _send(),
+                                style: FilledButton.styleFrom(
+                                  padding: EdgeInsets.zero,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 18,
-                                  ),
                                 ),
-                                child: const Icon(
-                                  Icons.send,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
+                                child: const Icon(Icons.send, size: 20),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              _buildQuickSuggestion('오늘 할 일 추천해줘'),
-                              _buildQuickSuggestion('시험 공부 계획 세워줘'),
-                              _buildQuickSuggestion('복습이 필요한 과목은?'),
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _QuickSuggestion(
+                              text: '오늘 뭐부터 해야 해?',
+                              onTap: state.isSending
+                                  ? null
+                                  : () => _send('오늘 뭐부터 해야 해?'),
+                            ),
+                            _QuickSuggestion(
+                              text: '시험 공부 계획 세워줘',
+                              onTap: state.isSending
+                                  ? null
+                                  : () => _send('시험 공부 계획 세워줘'),
+                            ),
+                            _QuickSuggestion(
+                              text: '30분 있으면 뭐 할까?',
+                              onTap: state.isSending
+                                  ? null
+                                  : () => _send('30분 있으면 뭐 할까?'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatMessageBubble extends StatelessWidget {
+  const _ChatMessageBubble({required this.message});
+
+  final AiCoachMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUser = message.role == AiCoachRole.user;
+    final scheme = Theme.of(context).colorScheme;
+    const userBubbleColor = Color(0xFFF7D3B8);
+    const userTextColor = Color(0xFF4E2507);
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          textDirection: isUser ? TextDirection.rtl : TextDirection.ltr,
+          children: [
+            if (!isUser) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: scheme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
+            Flexible(
+              child: Column(
+                crossAxisAlignment: isUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isUser ? userBubbleColor : scheme.surface,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(isUser ? 16 : 4),
+                        topRight: Radius.circular(isUser ? 4 : 16),
+                        bottomLeft: const Radius.circular(16),
+                        bottomRight: const Radius.circular(16),
                       ),
                     ),
-                  ],
-                ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message.content,
+                          style: TextStyle(
+                            fontSize: 15,
+                            height: 1.55,
+                            color: isUser ? userTextColor : scheme.onSurface,
+                          ),
+                        ),
+                        if (message.recommendations.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          ...message.recommendations.map(
+                            (item) => _RecommendationCard(item: item),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _formatTime(message.createdAt),
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-    );
-  }
-
-  Widget _buildUserMessage(BuildContext context, String text, String time) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(4),
-              ),
-            ),
-            child: Text(
-              text,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            time,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildAiMessage({
-    required BuildContext context,
-    required String content,
-    required String time,
-    List<Map<String, dynamic>>? recommendations,
-  }) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.auto_awesome,
-              color: Theme.of(context).colorScheme.primary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        content,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.6,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      if (recommendations != null &&
-                          recommendations.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        ...recommendations.map(
-                          (rec) => _buildRecommendationCard(context, rec),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  time,
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 48), // 우측 여백 확보
-        ],
-      ),
-    );
+  static String _formatTime(DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
+}
 
-  // AI 추천 할 일 카드
-  Widget _buildRecommendationCard(BuildContext context, Map<String, dynamic> item) {
+class _RecommendationCard extends StatelessWidget {
+  const _RecommendationCard({required this.item});
+
+  final AiCoachRecommendation item;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tagColor = switch (item.tagLevel) {
+      AiCoachTagLevel.urgent => scheme.error,
+      AiCoachTagLevel.scheduled => scheme.primary,
+      AiCoachTagLevel.review => scheme.secondary,
+      AiCoachTagLevel.normal => scheme.onSurfaceVariant,
+    };
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -292,67 +333,138 @@ class AiCoachScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['title'],
-                  style: Theme.of(context).textTheme.titleSmall!.copyWith(fontSize: 15),
+                  item.title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontSize: 15),
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 14,
-                      color: Colors.grey.shade600,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          item.timeRange,
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
                     Text(
-                      item['time'],
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      item['tag'],
-                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                        color: item['tagColor'],
+                      item.tag,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: tagColor,
                         fontSize: 13,
                       ),
                     ),
                   ],
                 ),
+                if (item.reason != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    item.reason!,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          Icon(
-            Icons.check_circle_outline,
-            color: Colors.grey.shade300,
-            size: 24,
+          Icon(Icons.check_circle_outline, color: scheme.outline, size: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickSuggestion extends StatelessWidget {
+  const _QuickSuggestion({required this.text, required this.onTap});
+
+  final String text;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ActionChip(
+      onPressed: onTap,
+      label: Text(text),
+      backgroundColor: scheme.surfaceContainerLowest,
+      side: BorderSide(color: scheme.outlineVariant),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    );
+  }
+}
+
+class _TypingMessage extends StatelessWidget {
+  const _TypingMessage();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.auto_awesome, color: scheme.primary, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              '분석 중...',
+              style: TextStyle(color: scheme.onSurface, fontSize: 14),
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  // 빠른 제안 버튼
-  Widget _buildQuickSuggestion(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Text(
-            text,
-            style: const TextStyle(fontSize: 13, color: Colors.black87),
-          ),
-        ),
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        message,
+        style: TextStyle(color: scheme.onErrorContainer, fontSize: 13),
       ),
     );
   }
