@@ -20,10 +20,8 @@ extension _CalendarStateHelpers on _CalendarScreenState {
         }
       }).toList();
 
-  List<EventItem> _eventsForDate(List<EventItem> events, DateTime date) {
-    final key = _fmtKey(date);
-    return events.where((e) => e.isActiveOnDate(date) || e.date == key).toList();
-  }
+  List<EventItem> _eventsForDate(List<EventItem> events, DateTime date) =>
+      events.where((e) => e.isActiveOnDate(date)).toList();
 
   // ── 헤더 탐색 ───────────────────────────────────────────────────
 
