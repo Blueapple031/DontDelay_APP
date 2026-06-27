@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'aicoach/ai_coach_model.dart';
 import 'aicoach/ai_coach_provider.dart';
+import 'todo/todo_model.dart';
+import 'todo/todo_provider.dart';
 
 class AiCoachScreen extends ConsumerStatefulWidget {
   const AiCoachScreen({super.key});
@@ -28,6 +30,26 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
     _controller.clear();
     await ref.read(aiCoachProvider.notifier).sendMessage(message);
     _scrollToBottom();
+  }
+
+  Future<void> _completeRecommendation(AiCoachRecommendation item) async {
+    final todoId = item.relatedTodoId;
+    if (todoId == null || todoId.isEmpty) return;
+
+    try {
+      await ref
+          .read(todoListProvider.notifier)
+          .changeStatus(todoId, TodoStatus.done);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('"${item.title}"을 완료 처리했습니다.')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('할 일을 완료 처리하지 못했습니다.')));
+    }
   }
 
   void _scrollToBottom() {
@@ -105,6 +127,7 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
                         }
                         return _ChatMessageBubble(
                           message: state.messages[index],
+                          onCompleteRecommendation: _completeRecommendation,
                         );
                       },
                     ),
@@ -204,9 +227,13 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
 }
 
 class _ChatMessageBubble extends StatelessWidget {
-  const _ChatMessageBubble({required this.message});
+  const _ChatMessageBubble({
+    required this.message,
+    required this.onCompleteRecommendation,
+  });
 
   final AiCoachMessage message;
+  final ValueChanged<AiCoachRecommendation> onCompleteRecommendation;
 
   @override
   Widget build(BuildContext context) {
@@ -273,7 +300,12 @@ class _ChatMessageBubble extends StatelessWidget {
                         if (message.recommendations.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           ...message.recommendations.map(
-                            (item) => _RecommendationCard(item: item),
+                            (item) => _RecommendationCard(
+                              item: item,
+                              onComplete: item.relatedTodoId == null
+                                  ? null
+                                  : () => onCompleteRecommendation(item),
+                            ),
                           ),
                         ],
                       ],
@@ -304,9 +336,10 @@ class _ChatMessageBubble extends StatelessWidget {
 }
 
 class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({required this.item});
+  const _RecommendationCard({required this.item, required this.onComplete});
 
   final AiCoachRecommendation item;
+  final VoidCallback? onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -384,7 +417,15 @@ class _RecommendationCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.check_circle_outline, color: scheme.outline, size: 24),
+          Tooltip(
+            message: onComplete == null ? '연결된 할 일이 없습니다' : '완료 처리',
+            child: IconButton(
+              onPressed: onComplete,
+              icon: const Icon(Icons.check_circle_outline),
+              color: onComplete == null ? scheme.outline : scheme.primary,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
         ],
       ),
     );
