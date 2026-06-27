@@ -60,12 +60,7 @@ class ExamModeService {
     try {
       final file = await _subjectsFile;
       if (!await file.exists()) {
-        // Return some default subjects
-        return [
-          StudySubject(id: '1', name: '운영체제', accumulatedSeconds: 0),
-          StudySubject(id: '2', name: '알고리즘', accumulatedSeconds: 0),
-          StudySubject(id: '3', name: '데이터베이스', accumulatedSeconds: 0),
-        ];
+        return [];
       }
       final jsonString = await file.readAsString();
       if (jsonString.trim().isEmpty) return [];
@@ -99,27 +94,7 @@ class ExamModeService {
     try {
       final file = await _tasksFile;
       if (!await file.exists()) {
-        // Return default mock tasks
-        return [
-          ExamTask(
-            id: '1',
-            title: '운영체제 3단원 기출문제 3회독',
-            isCompleted: true,
-            subject: '운영체제',
-          ),
-          ExamTask(
-            id: '2',
-            title: '알고리즘 DP 유형 5문제 풀이',
-            isCompleted: false,
-            subject: '알고리즘',
-          ),
-          ExamTask(
-            id: '3',
-            title: '데이터베이스 정규화 개념 암기',
-            isCompleted: false,
-            subject: '데이터베이스',
-          ),
-        ];
+        return [];
       }
       final jsonString = await file.readAsString();
       if (jsonString.trim().isEmpty) return [];
