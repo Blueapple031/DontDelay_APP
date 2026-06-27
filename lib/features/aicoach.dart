@@ -52,6 +52,49 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
     }
   }
 
+  Future<void> _createTodoFromRecommendation(AiCoachRecommendation item) async {
+    final draft = item.todoDraft;
+    if (draft == null ||
+        draft.title.trim().isEmpty ||
+        draft.date.trim().isEmpty) {
+      return;
+    }
+
+    try {
+      await ref
+          .read(todoListProvider.notifier)
+          .addTodo(
+            TodoItem(
+              title: draft.title.trim(),
+              date: draft.date,
+              priority: _priorityFromDraft(draft.priority),
+              tag: draft.tag.isEmpty ? 'default' : draft.tag,
+              status: TodoStatus.todo,
+              urgency: draft.urgency,
+              importance: draft.importance,
+              time: draft.time,
+              memo: draft.memo,
+            ),
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('"${draft.title}"을 할 일에 추가했습니다.')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('할 일을 추가하지 못했습니다.')));
+    }
+  }
+
+  TodoPriority _priorityFromDraft(String raw) {
+    return TodoPriority.values.firstWhere(
+      (priority) => priority.name == raw,
+      orElse: () => TodoPriority.medium,
+    );
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
@@ -128,6 +171,8 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
                         return _ChatMessageBubble(
                           message: state.messages[index],
                           onCompleteRecommendation: _completeRecommendation,
+                          onCreateTodoRecommendation:
+                              _createTodoFromRecommendation,
                         );
                       },
                     ),
@@ -230,10 +275,12 @@ class _ChatMessageBubble extends StatelessWidget {
   const _ChatMessageBubble({
     required this.message,
     required this.onCompleteRecommendation,
+    required this.onCreateTodoRecommendation,
   });
 
   final AiCoachMessage message;
   final ValueChanged<AiCoachRecommendation> onCompleteRecommendation;
+  final ValueChanged<AiCoachRecommendation> onCreateTodoRecommendation;
 
   @override
   Widget build(BuildContext context) {
@@ -302,9 +349,7 @@ class _ChatMessageBubble extends StatelessWidget {
                           ...message.recommendations.map(
                             (item) => _RecommendationCard(
                               item: item,
-                              onComplete: item.relatedTodoId == null
-                                  ? null
-                                  : () => onCompleteRecommendation(item),
+                              onAction: _actionFor(item),
                             ),
                           ),
                         ],
@@ -328,6 +373,18 @@ class _ChatMessageBubble extends StatelessWidget {
     );
   }
 
+  VoidCallback? _actionFor(AiCoachRecommendation item) {
+    return switch (item.action) {
+      AiCoachRecommendationAction.completeTodo =>
+        item.relatedTodoId == null
+            ? null
+            : () => onCompleteRecommendation(item),
+      AiCoachRecommendationAction.createTodo =>
+        item.todoDraft == null ? null : () => onCreateTodoRecommendation(item),
+      AiCoachRecommendationAction.none => null,
+    };
+  }
+
   static String _formatTime(DateTime time) {
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
@@ -336,10 +393,10 @@ class _ChatMessageBubble extends StatelessWidget {
 }
 
 class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({required this.item, required this.onComplete});
+  const _RecommendationCard({required this.item, required this.onAction});
 
   final AiCoachRecommendation item;
-  final VoidCallback? onComplete;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -418,17 +475,40 @@ class _RecommendationCard extends StatelessWidget {
             ),
           ),
           Tooltip(
-            message: onComplete == null ? '연결된 할 일이 없습니다' : '완료 처리',
+            message: _actionTooltip,
             child: IconButton(
-              onPressed: onComplete,
-              icon: const Icon(Icons.check_circle_outline),
-              color: onComplete == null ? scheme.outline : scheme.primary,
+              onPressed: onAction,
+              icon: Icon(_actionIcon),
+              color: onAction == null ? scheme.outline : scheme.primary,
               visualDensity: VisualDensity.compact,
             ),
           ),
         ],
       ),
     );
+  }
+
+  IconData get _actionIcon {
+    return switch (item.action) {
+      AiCoachRecommendationAction.completeTodo => Icons.check_circle_outline,
+      AiCoachRecommendationAction.createTodo => Icons.add_task,
+      AiCoachRecommendationAction.none => Icons.info_outline,
+    };
+  }
+
+  String get _actionTooltip {
+    if (onAction == null) {
+      return switch (item.action) {
+        AiCoachRecommendationAction.completeTodo => '연결된 할 일이 없습니다',
+        AiCoachRecommendationAction.createTodo => '추가할 할 일 정보가 없습니다',
+        AiCoachRecommendationAction.none => '실행할 수 있는 동작이 없습니다',
+      };
+    }
+    return switch (item.action) {
+      AiCoachRecommendationAction.completeTodo => '완료 처리',
+      AiCoachRecommendationAction.createTodo => '할 일 추가',
+      AiCoachRecommendationAction.none => '실행',
+    };
   }
 }
 

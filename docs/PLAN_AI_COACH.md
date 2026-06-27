@@ -34,6 +34,7 @@
 - 백엔드 API가 아직 없거나 `404`/`501`/`502`/연결 실패가 발생하면 앱 내부 mock 코칭 응답으로 fallback한다.
 - `401`/`400`/`429`/`AI_DISABLED`는 fallback하지 않고 사용자에게 에러로 표시한다.
 - `recommendations[].relatedTodoId`가 있으면 추천 카드 체크 버튼으로 해당 todo를 완료 처리할 수 있다.
+- `recommendations[].action == createTodo`이고 `todoDraft`가 있으면 추천 카드에서 새 할 일을 추가할 수 있다.
 
 ---
 
@@ -169,7 +170,27 @@ Base URL: `http://dontdelay.duckdns.org:8080` (운영 시 HTTPS 권장)
         "tag": "마감 임박",
         "tagLevel": "urgent",
         "reason": "오늘 마감이라 먼저 처리해야 합니다.",
-        "relatedTodoId": "uuid-or-null"
+        "relatedTodoId": "uuid-or-null",
+        "action": "completeTodo",
+        "todoDraft": null
+      },
+      {
+        "title": "운영체제 핵심 개념 40분 복습",
+        "timeRange": "오늘 안에",
+        "tag": "새 할 일",
+        "tagLevel": "review",
+        "reason": "시험 대비를 위해 작은 복습 단위로 추가할 수 있습니다.",
+        "relatedTodoId": null,
+        "action": "createTodo",
+        "todoDraft": {
+          "title": "운영체제 핵심 개념 40분 복습",
+          "date": "2026-05-28",
+          "priority": "medium",
+          "urgency": 5,
+          "importance": 6,
+          "tag": "default",
+          "memo": "AI 코치 추천"
+        }
       }
     ],
     "createdAt": "2026-05-28T14:23:00+09:00"
@@ -188,6 +209,8 @@ Base URL: `http://dontdelay.duckdns.org:8080` (운영 시 HTTPS 권장)
 | `tagLevel` | `urgent` \| `scheduled` \| `review` \| `normal` → 앱에서 색상 매핑 |
 | `relatedTodoId` | 기존 할 일과 연결 시 ID (없으면 `null`) |
 | `reason` | 추천 카드 하단에 표시할 짧은 근거. 선택 필드 |
+| `action` | `completeTodo` \| `createTodo` \| `none`. 프론트 추천 카드 버튼 동작 |
+| `todoDraft` | `createTodo`일 때 새 할 일 초안. 사용자가 버튼을 눌러야 실제 저장 |
 | `usage` | (선택) 과금·모니터링용 |
 
 **Error Responses**
