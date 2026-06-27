@@ -359,6 +359,7 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> {
 
     final overallTotalSeconds = totalStudyTimeAsync.value ?? 0;
     final subjects = subjectsAsync.value ?? [];
+    final dndOn = ref.watch(dndProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 30.0),
@@ -395,35 +396,41 @@ class _ExamModeScreenState extends ConsumerState<ExamModeScreen> {
               ),
               Row(
                 children: [
-                  // 집중 모드 토글
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEE2E2), // 연한 빨간색 배경
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFF87171)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.do_not_disturb_on,
-                          color: Color(0xFFDC2626),
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '방해금지 켜짐',
-                          style: Theme.of(context).textTheme.labelLarge!
-                              .copyWith(
-                                color: const Color(0xFFDC2626),
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ],
+                  // 집중 모드 토글 (방해금지 토글 버튼)
+                  InkWell(
+                    onTap: () {
+                      ref.read(dndProvider.notifier).toggle();
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: dndOn ? const Color(0xFFFEE2E2) : Colors.grey.shade100, // 연한 빨간색 또는 연한 회색
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: dndOn ? const Color(0xFFF87171) : Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            dndOn ? Icons.do_not_disturb_on : Icons.notifications_active_outlined,
+                            color: dndOn ? const Color(0xFFDC2626) : Colors.grey.shade600,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            dndOn ? '방해금지 켜짐' : '방해금지 꺼짐',
+                            style: Theme.of(context).textTheme.labelLarge!
+                                .copyWith(
+                                  color: dndOn ? const Color(0xFFDC2626) : Colors.grey.shade700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

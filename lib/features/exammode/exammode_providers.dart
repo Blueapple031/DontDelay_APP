@@ -167,3 +167,14 @@ class TotalStudyTimeNotifier extends AsyncNotifier<int> {
     await _service.saveTotalStudyTime(0);
   }
 }
+
+class DndNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() {
+    state = !state;
+  }
+}
+
+final dndProvider = NotifierProvider<DndNotifier, bool>(DndNotifier.new);

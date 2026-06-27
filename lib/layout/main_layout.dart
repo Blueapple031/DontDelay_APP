@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../features/todo/todo_add_dialog.dart';
 import '../features/todo/todo_model.dart';
 import '../features/todo/todo_provider.dart';
+import '../features/exammode/exammode_providers.dart';
 
 // ─── 알람 알림 모델 ────────────────────────────────────────────────────────────
 
@@ -81,6 +82,8 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   void _checkAlarms() {
     if (!mounted) return;
+    final dndOn = ref.read(dndProvider);
+    if (dndOn) return; // Do Not Disturb가 켜져 있으면 알림을 울리지 않음
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
