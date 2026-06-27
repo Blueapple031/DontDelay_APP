@@ -1,14 +1,74 @@
+import 'package:dio/dio.dart';
+
+import '../../core/api_error.dart';
 import '../todo/todo_model.dart';
 import 'ai_coach_model.dart';
 
 class AiCoachService {
-  Future<AiCoachMessage> sendMessage({
+  AiCoachService(this._dio);
+
+  final Dio _dio;
+
+  Future<AiCoachSendResult> sendMessage({
     required String message,
     required List<TodoItem> todos,
+    String? sessionId,
   }) async {
     final context = _buildContextSnapshot(todos);
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/api/ai/chat',
+        data: {
+          'message': message,
+          if (sessionId != null) 'sessionId': sessionId,
+          'locale': 'ko-KR',
+          'context': context.toJson(),
+        },
+      );
+      return _parseResponse(response.data);
+    } on DioException catch (e) {
+      if (!_shouldUseMockFallback(e)) {
+        throw AiCoachServiceException(_messageForDioException(e));
+      }
+
+      final fallback = await _buildMockResult(
+        message,
+        todos,
+        context,
+        sessionId,
+      );
+      return fallback;
+    }
+  }
+
+  AiCoachSendResult _parseResponse(Map<String, dynamic>? data) {
+    if (data == null) {
+      throw const AiCoachServiceException('AI 코치 응답이 비어 있습니다.');
+    }
+
+    final replyRaw = data['reply'];
+    if (replyRaw is! Map) {
+      throw const AiCoachServiceException('AI 코치 응답 형식이 올바르지 않습니다.');
+    }
+
+    return AiCoachSendResult(
+      message: AiCoachMessage.fromJson(Map<String, dynamic>.from(replyRaw)),
+      sessionId: data['sessionId']?.toString(),
+    );
+  }
+
+  Future<AiCoachSendResult> _buildMockResult(
+    String message,
+    List<TodoItem> todos,
+    AiCoachContextSnapshot context,
+    String? sessionId,
+  ) async {
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    return _buildMockReply(message, todos, context);
+    return AiCoachSendResult(
+      message: _buildMockReply(message, todos, context),
+      sessionId: sessionId,
+      usedFallback: true,
+    );
   }
 
   AiCoachMessage _buildMockReply(
@@ -192,4 +252,48 @@ class AiCoachService {
     };
     return (todo.urgency * 2) + (todo.importance * 2) + priorityBonus;
   }
+
+  bool _shouldUseMockFallback(DioException e) {
+    if (e.response == null) return true;
+
+    final statusCode = e.response?.statusCode;
+    final errorCode = errorCodeFromResponse(e.response?.data);
+    if (statusCode == 401 || statusCode == 400 || statusCode == 429) {
+      return false;
+    }
+    if (errorCode == 'AI_DISABLED') return false;
+    return statusCode == 404 || statusCode == 501 || statusCode == 502;
+  }
+
+  String _messageForDioException(DioException e) {
+    if (e.response?.statusCode == 401) {
+      return 'AI 코치를 사용하려면 로그인이 필요합니다.';
+    }
+
+    final connectionError = parseConnectionError(e);
+    if (connectionError != null) return connectionError;
+
+    final message = messageFromResponse(e.response?.data);
+    if (message != null && message.isNotEmpty) return message;
+
+    return 'AI 코치 응답을 가져오지 못했습니다. 잠시 후 다시 시도해주세요.';
+  }
+}
+
+class AiCoachSendResult {
+  const AiCoachSendResult({
+    required this.message,
+    this.sessionId,
+    this.usedFallback = false,
+  });
+
+  final AiCoachMessage message;
+  final String? sessionId;
+  final bool usedFallback;
+}
+
+class AiCoachServiceException implements Exception {
+  const AiCoachServiceException(this.message);
+
+  final String message;
 }

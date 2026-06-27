@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/api_client.dart';
 import '../todo/todo_model.dart';
 import '../todo/todo_provider.dart';
 import 'ai_coach_model.dart';
 import 'ai_coach_service.dart';
 
 final aiCoachServiceProvider = Provider<AiCoachService>((ref) {
-  return AiCoachService();
+  return AiCoachService(ref.watch(dioProvider));
 });
 
 final aiCoachProvider = NotifierProvider<AiCoachNotifier, AiCoachChatState>(
@@ -47,11 +48,18 @@ class AiCoachNotifier extends Notifier<AiCoachChatState> {
       final todos = ref.read(todoListProvider).value ?? const <TodoItem>[];
       final reply = await ref
           .read(aiCoachServiceProvider)
-          .sendMessage(message: message, todos: todos);
+          .sendMessage(
+            message: message,
+            todos: todos,
+            sessionId: state.sessionId,
+          );
       state = state.copyWith(
-        messages: [...state.messages, reply],
+        messages: [...state.messages, reply.message],
         isSending: false,
+        sessionId: reply.sessionId,
       );
+    } on AiCoachServiceException catch (e) {
+      state = state.copyWith(isSending: false, errorMessage: e.message);
     } catch (_) {
       state = state.copyWith(
         isSending: false,
