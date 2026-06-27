@@ -236,7 +236,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             onPressed: () {
               ref.read(authProvider.notifier).logout();
               Navigator.pop(context);
-              context.go('/dashboard');
+              context.go('/login');
             },
             child: const Text(
               '로그아웃',
@@ -266,10 +266,11 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     final email = profile?.email ?? '';
     final department = profile?.department ?? '';
     final major = profile?.major ?? '';
+    final displayMajor = major.isNotEmpty ? major : department;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(40.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,131 +283,124 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             const SizedBox(height: 40),
 
             // 2. 메인 콘텐츠 (데스크톱 환경에 맞게 가운데 정렬 및 최대 너비 제한)
-            Expanded(
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Column(
-                    children: [
-                      // --- [프로필 섹션] ---
-                      Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Column(
-                          children: [
-                            // 프로필 이미지
-                            Stack(
-                              alignment: Alignment.bottomRight,
-                              children: [
-                                CircleAvatar(
-                                  radius: 60,
-                                  backgroundColor: Colors.grey.shade200,
-                                  // backgroundImage: NetworkImage('이미지 URL'), // 실제 이미지 연동 시 주석 해제
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 60,
-                                    color: Colors.grey.shade400,
-                                  ),
+            Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Column(
+                  children: [
+                    // --- [프로필 섹션] ---
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          // 프로필 이미지
+                          Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              CircleAvatar(
+                                radius: 60,
+                                backgroundColor: Colors.grey.shade200,
+                                // backgroundImage: NetworkImage('이미지 URL'), // 실제 이미지 연동 시 주석 해제
+                                child: Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.grey.shade400,
                                 ),
-                                GestureDetector(
-                                  onTap: _changeProfileImage,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: themeColor,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt,
-                                      size: 20,
+                              ),
+                              GestureDetector(
+                                onTap: _changeProfileImage,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: themeColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
                                       color: Colors.white,
+                                      width: 2,
                                     ),
                                   ),
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
 
+                          Text(
+                            realName.isNotEmpty ? realName : '실명 미등록',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (username.isNotEmpty) ...[
+                            const SizedBox(height: 8),
                             Text(
-                              realName.isNotEmpty ? realName : '실명 미등록',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                              '@$username',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
                               ),
                             ),
-                            if (username.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                '@$username',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                            if (email.isNotEmpty ||
-                                department.isNotEmpty ||
-                                major.isNotEmpty) ...[
-                              const SizedBox(height: 20),
-                              const Divider(),
-                              const SizedBox(height: 16),
-                              if (email.isNotEmpty)
-                                _buildProfileInfoRow('이메일', email),
-                              if (department.isNotEmpty)
-                                _buildProfileInfoRow('학과', department),
-                              if (major.isNotEmpty)
-                                _buildProfileInfoRow('전공', major),
-                            ],
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // --- [설정 리스트 섹션] ---
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Column(
-                          children: [
-
-                            _buildSettingMenu(
-                              icon: Icons.palette_outlined,
-                              title: '테마 색상 설정',
-                              subtitle: '앱의 기본 테마 색상을 변경합니다.',
-                              onTap: _showThemeSelectionDialog,
-                            ),
-                            const Divider(height: 1),
-                            _buildSettingMenu(
-                              icon: Icons.lock_outline,
-                              title: '비밀번호 변경',
-                              subtitle: '주기적인 변경으로 계정을 안전하게 보호하세요.',
-                              onTap: _changePassword,
-                            ),
-                            const Divider(height: 1),
-                            _buildSettingMenu(
-                              icon: Icons.logout_rounded,
-                              title: '로그아웃',
-                              subtitle: '현재 기기에서 로그아웃 합니다.',
-                              titleColor: Colors.redAccent,
-                              iconColor: Colors.redAccent,
-                              onTap: _confirmLogout,
-                            ),
+                          if (email.isNotEmpty || displayMajor.isNotEmpty) ...[
+                            const SizedBox(height: 20),
+                            const Divider(),
+                            const SizedBox(height: 16),
+                            if (email.isNotEmpty)
+                              _buildProfileInfoRow('이메일', email),
+                            if (displayMajor.isNotEmpty)
+                              _buildProfileInfoRow('전공', displayMajor),
                           ],
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // --- [설정 리스트 섹션] ---
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildSettingMenu(
+                            icon: Icons.palette_outlined,
+                            title: '테마 색상 설정',
+                            subtitle: '앱의 기본 테마 색상을 변경합니다.',
+                            onTap: _showThemeSelectionDialog,
+                          ),
+                          const Divider(height: 1),
+                          _buildSettingMenu(
+                            icon: Icons.lock_outline,
+                            title: '비밀번호 변경',
+                            subtitle: '주기적인 변경으로 계정을 안전하게 보호하세요.',
+                            onTap: _changePassword,
+                          ),
+                          const Divider(height: 1),
+                          _buildSettingMenu(
+                            icon: Icons.logout_rounded,
+                            title: '로그아웃',
+                            subtitle: '현재 기기에서 로그아웃 합니다.',
+                            titleColor: Colors.redAccent,
+                            iconColor: Colors.redAccent,
+                            onTap: _confirmLogout,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -436,10 +430,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
         ],
