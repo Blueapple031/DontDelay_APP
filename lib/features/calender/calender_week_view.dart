@@ -14,10 +14,12 @@ extension _CalendarWeekView on _CalendarScreenState {
         trackVisibility: const WidgetStatePropertyAll(true),
         thickness: const WidgetStatePropertyAll(6),
         radius: const Radius.circular(3),
-        thumbColor:
-            WidgetStatePropertyAll(cs.onSurface.withValues(alpha: 0.22)),
-        trackColor:
-            WidgetStatePropertyAll(cs.onSurface.withValues(alpha: 0.06)),
+        thumbColor: WidgetStatePropertyAll(
+          cs.onSurface.withValues(alpha: 0.22),
+        ),
+        trackColor: WidgetStatePropertyAll(
+          cs.onSurface.withValues(alpha: 0.06),
+        ),
         trackBorderColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
       child: Scrollbar(
@@ -67,8 +69,10 @@ extension _CalendarWeekView on _CalendarScreenState {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border:
-              Border.all(color: tagColor.withValues(alpha: 0.45), width: 1.2),
+          border: Border.all(
+            color: tagColor.withValues(alpha: 0.45),
+            width: 1.2,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -95,14 +99,16 @@ extension _CalendarWeekView on _CalendarScreenState {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (tagName != null && tagName.isNotEmpty)
-                    Text(tagName,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: tagColor.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      tagName,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: tagColor.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   Text(
                     title,
                     style: TextStyle(
@@ -124,9 +130,10 @@ extension _CalendarWeekView on _CalendarScreenState {
             ),
             if (time != null) ...[
               const SizedBox(width: 6),
-              Text(time,
-                  style: const TextStyle(
-                      fontSize: 11, color: Color(0x73000000))),
+              Text(
+                time,
+                style: const TextStyle(fontSize: 11, color: Color(0x73000000)),
+              ),
             ],
           ],
         ),
@@ -148,8 +155,8 @@ extension _CalendarWeekView on _CalendarScreenState {
     final label = diff == 0
         ? '오늘'
         : diff == 1
-            ? '내일'
-            : weekdays[date.weekday - 1];
+        ? '내일'
+        : weekdays[date.weekday - 1];
     final dateKey = _fmtKey(date);
 
     final allItems = <({bool isEvent, Object data, String? time})>[
@@ -177,20 +184,25 @@ extension _CalendarWeekView on _CalendarScreenState {
           await ref
               .read(eventListProvider.notifier)
               .addDeletedOverride(event.id, instanceDate);
-          await ref.read(eventListProvider.notifier).addEvent(EventItem(
-                title: event.title,
-                date: newDate,
-                time: event.time,
-                memo: event.memo,
-                tag: event.tag,
-                repeat: RepeatType.none,
-                alarmTime: event.alarmTime,
-              ));
+          await ref
+              .read(eventListProvider.notifier)
+              .addEvent(
+                EventItem(
+                  title: event.title,
+                  date: newDate,
+                  time: event.time,
+                  memo: event.memo,
+                  tag: event.tag,
+                  repeat: RepeatType.none,
+                  alarmTime: event.alarmTime,
+                ),
+              );
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
       }
     }
 
@@ -216,18 +228,19 @@ extension _CalendarWeekView on _CalendarScreenState {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(label,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: isToday
-                            ? const Color(0xFF1F2937)
-                            : cs.onSurface,
-                      )),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: isToday ? const Color(0xFF1F2937) : cs.onSurface,
+                    ),
+                  ),
                   const SizedBox(width: 6),
-                  Text('${date.month}/${date.day}',
-                      style:
-                          TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+                  Text(
+                    '${date.month}/${date.day}',
+                    style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                  ),
                 ],
               ),
             ),
@@ -256,27 +269,30 @@ extension _CalendarWeekView on _CalendarScreenState {
                             .addDeletedOverride(task.id, instanceDate);
                         await ref
                             .read(todoListProvider.notifier)
-                            .addTodo(TodoItem(
-                              title: task.title,
-                              date: newDate,
-                              priority: task.priority,
-                              tag: task.tag,
-                              status: TodoStatus.todo,
-                              time: task.time,
-                              memo: task.memo,
-                              repeat: RepeatType.none,
-                              alarmTime: task.alarmTime,
-                            ));
+                            .addTodo(
+                              TodoItem(
+                                title: task.title,
+                                date: newDate,
+                                priority: task.priority,
+                                tag: task.tag,
+                                status: TodoStatus.todo,
+                                time: task.time,
+                                memo: task.memo,
+                                repeat: RepeatType.none,
+                                alarmTime: task.alarmTime,
+                              ),
+                            );
                       }
                     } catch (e) {
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('저장에 실패했습니다: $e')));
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
                     }
                   },
                   builder: (ctx, todoCandidates, _) {
-                    final isHovering = todoCandidates.isNotEmpty ||
-                        eventCandidates.isNotEmpty;
+                    final isHovering =
+                        todoCandidates.isNotEmpty || eventCandidates.isNotEmpty;
 
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 140),
@@ -285,7 +301,8 @@ extension _CalendarWeekView on _CalendarScreenState {
                             ? cs.primaryContainer.withValues(alpha: 0.5)
                             : Colors.transparent,
                         borderRadius: const BorderRadius.vertical(
-                            bottom: Radius.circular(11)),
+                          bottom: Radius.circular(11),
+                        ),
                       ),
                       child: Padding(
                         padding: allItems.isEmpty
@@ -295,36 +312,45 @@ extension _CalendarWeekView on _CalendarScreenState {
                           children: [
                             for (final item in allItems)
                               Padding(
-                                padding:
-                                    const EdgeInsets.only(bottom: 6),
+                                padding: const EdgeInsets.only(bottom: 6),
                                 child: item.isEvent
                                     ? _buildWeekEventCard(
                                         item.data as EventItem,
                                         cs,
                                         eventTagMap,
-                                        date)
+                                        date,
+                                      )
                                     : _buildSevenDayCard(
                                         item.data as TodoItem,
                                         tagMap,
                                         date,
-                                        (item.data as TodoItem)
-                                            .isDoneOnDate(dateKey)),
+                                        (item.data as TodoItem).isDoneOnDate(
+                                          dateKey,
+                                        ),
+                                      ),
                               ),
                             MouseRegion(
                               cursor: SystemMouseCursors.click,
                               child: TextButton(
                                 onPressed: () => showUnifiedAddDialog(
-                                    context, ref,
-                                    initialDate: date),
+                                  context,
+                                  ref,
+                                  initialDate: date,
+                                ),
                                 style: TextButton.styleFrom(
                                   alignment: Alignment.centerLeft,
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 2, vertical: 6),
+                                    horizontal: 2,
+                                    vertical: 6,
+                                  ),
                                 ),
-                                child: Text('+ADD',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: cs.onSurfaceVariant)),
+                                child: Text(
+                                  '+ADD',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -358,19 +384,23 @@ extension _CalendarWeekView on _CalendarScreenState {
         border: Border.all(color: cs.outlineVariant),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 4,
-              offset: const Offset(0, 2)),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                  color: color, borderRadius: BorderRadius.circular(3))),
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: GestureDetector(
@@ -381,38 +411,47 @@ extension _CalendarWeekView on _CalendarScreenState {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (tag.name.isNotEmpty)
-                    Text(tag.name,
-                        style: TextStyle(
-                            fontSize: 10,
-                            color: color.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w600),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                  Text(event.title,
-                      style: TextStyle(fontSize: 13, color: cs.onSurface),
+                    Text(
+                      tag.name,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: color.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  Text(
+                    event.title,
+                    style: TextStyle(fontSize: 13, color: cs.onSurface),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
           ),
           if (event.time != null) ...[
             const SizedBox(width: 6),
-            Text(event.time!,
-                style: TextStyle(
-                    fontSize: 11,
-                    color: cs.onSurface.withValues(alpha: 0.45))),
+            Text(
+              event.time!,
+              style: TextStyle(
+                fontSize: 11,
+                color: cs.onSurface.withValues(alpha: 0.45),
+              ),
+            ),
           ],
         ],
       ),
     );
 
     final feedback = _buildWeekCardFeedback(
-        isEvent: true,
-        title: event.title,
-        tagName: tag.name,
-        tagColor: color,
-        time: event.time);
+      isEvent: true,
+      title: event.title,
+      tagName: tag.name,
+      tagColor: color,
+      time: event.time,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.grab,
@@ -434,7 +473,8 @@ extension _CalendarWeekView on _CalendarScreenState {
     bool isDone,
   ) {
     final cs = Theme.of(context).colorScheme;
-    final tag = tagMap[todo.tag] ?? TagItem.defaultTag;
+    final tag =
+        tagMap[todo.tag] ?? tagMap[TagItem.defaultId] ?? TagItem.defaultTag;
     final color = hexToColor(tag.colorHex);
     final dateKey = _fmtKey(date);
 
@@ -446,9 +486,10 @@ extension _CalendarWeekView on _CalendarScreenState {
         border: Border.all(color: cs.outlineVariant),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 4,
-              offset: const Offset(0, 2)),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
@@ -458,7 +499,9 @@ extension _CalendarWeekView on _CalendarScreenState {
             onTap: () async {
               try {
                 if (todo.repeat == RepeatType.none) {
-                  await ref.read(todoListProvider.notifier).changeStatus(
+                  await ref
+                      .read(todoListProvider.notifier)
+                      .changeStatus(
                         todo.id,
                         isDone ? TodoStatus.todo : TodoStatus.done,
                       );
@@ -469,8 +512,9 @@ extension _CalendarWeekView on _CalendarScreenState {
                 }
               } catch (e) {
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('저장에 실패했습니다: $e')));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
               }
             },
             child: Icon(
@@ -490,13 +534,16 @@ extension _CalendarWeekView on _CalendarScreenState {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (tag.name.isNotEmpty)
-                    Text(tag.name,
-                        style: TextStyle(
-                            fontSize: 10,
-                            color: color.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w600),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      tag.name,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: color.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   Text(
                     todo.title,
                     style: TextStyle(
@@ -517,23 +564,26 @@ extension _CalendarWeekView on _CalendarScreenState {
           ),
           if (todo.time != null) ...[
             const SizedBox(width: 6),
-            Text(todo.time!,
-                style: TextStyle(
-                    fontSize: 11,
-                    color:
-                        cs.onSurface.withValues(alpha: isDone ? 0.3 : 0.45))),
+            Text(
+              todo.time!,
+              style: TextStyle(
+                fontSize: 11,
+                color: cs.onSurface.withValues(alpha: isDone ? 0.3 : 0.45),
+              ),
+            ),
           ],
         ],
       ),
     );
 
     final feedback = _buildWeekCardFeedback(
-        isEvent: false,
-        title: todo.title,
-        tagName: tag.name,
-        tagColor: color,
-        time: todo.time,
-        isDone: isDone);
+      isEvent: false,
+      title: todo.title,
+      tagName: tag.name,
+      tagColor: color,
+      time: todo.time,
+      isDone: isDone,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.grab,

@@ -67,7 +67,9 @@ class _TitleTimeRowState extends State<_TitleTimeRow>
       textDirection: TextDirection.ltr,
       maxLines: 1,
     )..layout(maxWidth: double.infinity);
-    if (mounted) setState(() => _shouldAnimate = painter.width > box.size.width);
+    if (mounted) {
+      setState(() => _shouldAnimate = painter.width > box.size.width);
+    }
   }
 
   @override
@@ -88,14 +90,19 @@ class _TitleTimeRowState extends State<_TitleTimeRow>
     }
 
     final timeStyle = widget.titleStyle.copyWith(
-      color: (widget.titleStyle.color ?? Colors.black87)
-          .withValues(alpha: 0.55),
+      color: (widget.titleStyle.color ?? Colors.black87).withValues(
+        alpha: 0.55,
+      ),
       fontWeight: FontWeight.w400,
     );
 
     return MouseRegion(
-      onEnter: (_) { if (_shouldAnimate) _ctrl.forward(from: 0); },
-      onExit: (_) { if (_shouldAnimate) _ctrl.reverse(); },
+      onEnter: (_) {
+        if (_shouldAnimate) _ctrl.forward(from: 0);
+      },
+      onExit: (_) {
+        if (_shouldAnimate) _ctrl.reverse();
+      },
       child: Row(
         children: [
           Expanded(
@@ -144,23 +151,28 @@ extension _CalendarMonthView on _CalendarScreenState {
         // 요일 헤더 (일 ~ 토)
         Row(
           children: const ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
-              .map((d) => Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 7),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                                  color: Colors.grey.shade200))),
-                      alignment: Alignment.center,
-                      child: Text(d,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color.fromARGB(255, 125, 122, 122),
-                            letterSpacing: 0.5,
-                          )),
+              .map(
+                (d) => Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 7),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey.shade200),
+                      ),
                     ),
-                  ))
+                    alignment: Alignment.center,
+                    child: Text(
+                      d,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: const Color.fromARGB(255, 125, 122, 122),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              )
               .toList(),
         ),
         // 날짜 그리드
@@ -176,8 +188,9 @@ extension _CalendarMonthView on _CalendarScreenState {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: List.generate(7, (col) {
-                        final date =
-                            gridStart.add(Duration(days: row * 7 + col));
+                        final date = gridStart.add(
+                          Duration(days: row * 7 + col),
+                        );
                         final dayTodos = _todosForDate(todos, date);
                         final dayEvents = _eventsForDate(events, date);
                         return Expanded(
@@ -244,20 +257,25 @@ extension _CalendarMonthView on _CalendarScreenState {
           await ref
               .read(eventListProvider.notifier)
               .addDeletedOverride(event.id, instanceDate);
-          await ref.read(eventListProvider.notifier).addEvent(EventItem(
-                title: event.title,
-                date: newDate,
-                time: event.time,
-                memo: event.memo,
-                tag: event.tag,
-                repeat: RepeatType.none,
-                alarmTime: event.alarmTime,
-              ));
+          await ref
+              .read(eventListProvider.notifier)
+              .addEvent(
+                EventItem(
+                  title: event.title,
+                  date: newDate,
+                  time: event.time,
+                  memo: event.memo,
+                  tag: event.tag,
+                  repeat: RepeatType.none,
+                  alarmTime: event.alarmTime,
+                ),
+              );
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
       }
     }
 
@@ -283,22 +301,27 @@ extension _CalendarMonthView on _CalendarScreenState {
                 await ref
                     .read(todoListProvider.notifier)
                     .addDeletedOverride(task.id, instanceDate);
-                await ref.read(todoListProvider.notifier).addTodo(TodoItem(
-                      title: task.title,
-                      date: newDate,
-                      priority: task.priority,
-                      tag: task.tag,
-                      status: TodoStatus.todo,
-                      time: task.time,
-                      memo: task.memo,
-                      repeat: RepeatType.none,
-                      alarmTime: task.alarmTime,
-                    ));
+                await ref
+                    .read(todoListProvider.notifier)
+                    .addTodo(
+                      TodoItem(
+                        title: task.title,
+                        date: newDate,
+                        priority: task.priority,
+                        tag: task.tag,
+                        status: TodoStatus.todo,
+                        time: task.time,
+                        memo: task.memo,
+                        repeat: RepeatType.none,
+                        alarmTime: task.alarmTime,
+                      ),
+                    );
               }
             } catch (e) {
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('저장에 실패했습니다: $e')));
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
             }
           },
           builder: (cellCtx, todoCandidates, _) {
@@ -321,7 +344,9 @@ extension _CalendarMonthView on _CalendarScreenState {
                         bottom: BorderSide(color: Colors.grey.shade200),
                         left: isHovering
                             ? const BorderSide(
-                                color: Color(0xFF1F2937), width: 2)
+                                color: Color(0xFF1F2937),
+                                width: 2,
+                              )
                             : BorderSide.none,
                       ),
                     ),
@@ -340,45 +365,67 @@ extension _CalendarMonthView on _CalendarScreenState {
                                     shape: BoxShape.circle,
                                   ),
                                   alignment: Alignment.center,
-                                  child: Text('${date.day}',
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 10)),
+                                  child: Text(
+                                    '${date.day}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                    ),
+                                  ),
                                 )
-                              : Text('${date.day}',
+                              : Text(
+                                  '${date.day}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
                                     color: inMonth
                                         ? cs.onSurface
                                         : Colors.grey.shade400,
-                                  )),
+                                  ),
+                                ),
                         ),
                         // 이벤트+할일 통합 표시 (최대 4개, 시간순 우선)
                         ...shownItems.map((entry) {
                           if (entry.isEvent) {
                             return _buildEventBlock(
-                                entry.data as EventItem, cs, eventTagMap, date);
+                              entry.data as EventItem,
+                              cs,
+                              eventTagMap,
+                              date,
+                            );
                           }
                           final t = entry.data as TodoItem;
-                          return _buildMonthBlock(t, tagMap, date,
-                              isDone: t.isDoneOnDate(dateKey));
+                          return _buildMonthBlock(
+                            t,
+                            tagMap,
+                            date,
+                            isDone: t.isDoneOnDate(dateKey),
+                          );
                         }),
                         // +more: 실제로 숨겨진 항목 수 기준
                         if (hiddenCount > 0)
                           MouseRegion(
                             cursor: SystemMouseCursors.click,
                             onEnter: (_) => _scheduleOverflowPopup(
-                                builderCtx, date, todos, events, tagMap),
+                              builderCtx,
+                              date,
+                              todos,
+                              events,
+                              tagMap,
+                            ),
                             onExit: (_) => _cancelHoverTimer(),
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTap: () => _showOverflowPopup(
-                                  builderCtx, date, todos, events, tagMap),
+                                builderCtx,
+                                date,
+                                todos,
+                                events,
+                                tagMap,
+                              ),
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(5, 1, 5, 2),
+                                padding: const EdgeInsets.fromLTRB(5, 1, 5, 2),
                                 child: Text(
                                   '+$hiddenCount more',
                                   style: TextStyle(
@@ -408,15 +455,15 @@ extension _CalendarMonthView on _CalendarScreenState {
     DateTime date, {
     required bool isDone,
   }) {
-    final tag = tagMap[todo.tag] ?? TagItem.defaultTag;
+    final tag =
+        tagMap[todo.tag] ?? tagMap[TagItem.defaultId] ?? TagItem.defaultTag;
     final color = hexToColor(tag.colorHex);
     final dateKey = _fmtKey(date);
 
     final titleStyle = TextStyle(
       fontSize: 11,
       color: isDone ? Colors.grey.shade400 : Colors.black87,
-      decoration:
-          isDone ? TextDecoration.lineThrough : TextDecoration.none,
+      decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
       decorationColor: Colors.grey.shade400,
     );
 
@@ -428,7 +475,9 @@ extension _CalendarMonthView on _CalendarScreenState {
         borderRadius: BorderRadius.circular(4),
         border: Border(
           left: BorderSide(
-              color: color.withValues(alpha: isDone ? 0.4 : 1), width: 2.5),
+            color: color.withValues(alpha: isDone ? 0.4 : 1),
+            width: 2.5,
+          ),
         ),
       ),
       child: Row(
@@ -439,7 +488,9 @@ extension _CalendarMonthView on _CalendarScreenState {
             onTap: () async {
               try {
                 if (todo.repeat == RepeatType.none) {
-                  await ref.read(todoListProvider.notifier).changeStatus(
+                  await ref
+                      .read(todoListProvider.notifier)
+                      .changeStatus(
                         todo.id,
                         isDone ? TodoStatus.todo : TodoStatus.done,
                       );
@@ -450,24 +501,23 @@ extension _CalendarMonthView on _CalendarScreenState {
                 }
               } catch (e) {
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('저장에 실패했습니다: $e')));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
               }
             },
             child: Icon(
-              isDone
-                  ? Icons.check_circle
-                  : Icons.radio_button_unchecked,
+              isDone ? Icons.check_circle : Icons.radio_button_unchecked,
               size: 11,
-              color:
-                  isDone ? color.withValues(alpha: 0.5) : Colors.black38,
+              color: isDone ? color.withValues(alpha: 0.5) : Colors.black38,
             ),
           ),
           const SizedBox(width: 3),
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => showTodoEditDialog(context, ref, todo, instanceDate: date),
+              onTap: () =>
+                  showTodoEditDialog(context, ref, todo, instanceDate: date),
               child: _TitleTimeRow(
                 title: todo.title,
                 time: todo.time,

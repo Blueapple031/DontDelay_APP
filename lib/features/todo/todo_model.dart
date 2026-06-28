@@ -3,19 +3,20 @@ import 'package:uuid/uuid.dart';
 const _uuid = Uuid();
 
 enum TodoStatus { todo, inProgress, done }
+
 enum TodoPriority { high, medium, low }
 
 enum RepeatType { none, daily, weekly, monthly, yearly, weekdays }
 
 extension RepeatTypeLabel on RepeatType {
   String get label => switch (this) {
-        RepeatType.none => '반복 안함',
-        RepeatType.daily => '매일',
-        RepeatType.weekly => '매주',
-        RepeatType.monthly => '매월',
-        RepeatType.yearly => '매년',
-        RepeatType.weekdays => '요일',
-      };
+    RepeatType.none => '반복 안함',
+    RepeatType.daily => '매일',
+    RepeatType.weekly => '매주',
+    RepeatType.monthly => '매월',
+    RepeatType.yearly => '매년',
+    RepeatType.weekdays => '요일',
+  };
 }
 
 class TodoItem {
@@ -64,17 +65,17 @@ class TodoItem {
     Set<String>? doneOverrides,
     Set<String>? deletedOverrides,
     this.repeatEndDate,
-  })  : id = id ?? _uuid.v4(),
-        urgency = urgency != null
-            ? urgency.clamp(1, 8).toInt()
-            : TodoItem.defaultsForPriority(priority).$1,
-        importance = importance != null
-            ? importance.clamp(1, 8).toInt()
-            : TodoItem.defaultsForPriority(priority).$2,
-        createdAt = createdAt ?? DateTime.now(),
-        repeatWeekdays = repeatWeekdays ?? const [],
-        doneOverrides = doneOverrides ?? const {},
-        deletedOverrides = deletedOverrides ?? const {};
+  }) : id = id ?? _uuid.v4(),
+       urgency = urgency != null
+           ? urgency.clamp(1, 8).toInt()
+           : TodoItem.defaultsForPriority(priority).$1,
+       importance = importance != null
+           ? importance.clamp(1, 8).toInt()
+           : TodoItem.defaultsForPriority(priority).$2,
+       createdAt = createdAt ?? DateTime.now(),
+       repeatWeekdays = repeatWeekdays ?? const [],
+       doneOverrides = doneOverrides ?? const {},
+       deletedOverrides = deletedOverrides ?? const {};
 
   static (int, int) defaultsForPriority(TodoPriority p) {
     switch (p) {
@@ -127,8 +128,7 @@ class TodoItem {
       RepeatType.daily => true,
       RepeatType.weekly => date.weekday == start.weekday,
       RepeatType.monthly => date.day == start.day,
-      RepeatType.yearly =>
-        date.day == start.day && date.month == start.month,
+      RepeatType.yearly => date.day == start.day && date.month == start.month,
       RepeatType.weekdays => repeatWeekdays.contains(date.weekday),
     };
   }
@@ -183,13 +183,15 @@ class TodoItem {
       memo: clearMemo ? null : (memo ?? this.memo),
       repeat: repeat ?? this.repeat,
       repeatWeekdays: repeatWeekdays ?? this.repeatWeekdays,
-      repeatGroupId:
-          clearRepeatGroupId ? null : (repeatGroupId ?? this.repeatGroupId),
+      repeatGroupId: clearRepeatGroupId
+          ? null
+          : (repeatGroupId ?? this.repeatGroupId),
       alarmTime: clearAlarmTime ? null : (alarmTime ?? this.alarmTime),
       doneOverrides: doneOverrides ?? this.doneOverrides,
       deletedOverrides: deletedOverrides ?? this.deletedOverrides,
-      repeatEndDate:
-          clearRepeatEndDate ? null : (repeatEndDate ?? this.repeatEndDate),
+      repeatEndDate: clearRepeatEndDate
+          ? null
+          : (repeatEndDate ?? this.repeatEndDate),
     );
   }
 
@@ -255,12 +257,17 @@ class TodoItem {
         ? Set<String>.from(deletedRaw.map((e) => e.toString()))
         : <String>{};
 
+    final tag = switch (json['tag'] as String?) {
+      null || '' || '기본값' || '기본' => 'default',
+      final value => value,
+    };
+
     return TodoItem(
       id: json['id'] as String,
       title: json['title'] as String,
       date: json['date'] as String,
       priority: p,
-      tag: (json['tag'] as String?) ?? 'default',
+      tag: tag,
       status: TodoStatus.values.byName(json['status'] as String),
       urgency: u,
       importance: im,

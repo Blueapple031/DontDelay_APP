@@ -2,22 +2,28 @@ enum AiCoachRole { user, assistant }
 
 enum AiCoachTagLevel { urgent, scheduled, review, normal }
 
+enum AiCoachRecommendationAction { completeTodo, createTodo, none }
+
 class AiCoachRecommendation {
   const AiCoachRecommendation({
     required this.title,
     required this.timeRange,
     required this.tag,
     required this.tagLevel,
+    this.action = AiCoachRecommendationAction.none,
     this.reason,
     this.relatedTodoId,
+    this.todoDraft,
   });
 
   final String title;
   final String timeRange;
   final String tag;
   final AiCoachTagLevel tagLevel;
+  final AiCoachRecommendationAction action;
   final String? reason;
   final String? relatedTodoId;
+  final AiCoachTodoDraft? todoDraft;
 
   Map<String, dynamic> toJson() {
     return {
@@ -25,19 +31,26 @@ class AiCoachRecommendation {
       'timeRange': timeRange,
       'tag': tag,
       'tagLevel': tagLevel.name,
+      'action': action.name,
       if (reason != null) 'reason': reason,
       if (relatedTodoId != null) 'relatedTodoId': relatedTodoId,
+      if (todoDraft != null) 'todoDraft': todoDraft!.toJson(),
     };
   }
 
   factory AiCoachRecommendation.fromJson(Map<String, dynamic> json) {
+    final todoDraftRaw = json['todoDraft'];
     return AiCoachRecommendation(
       title: (json['title'] ?? '').toString(),
       timeRange: (json['timeRange'] ?? json['time'] ?? '').toString(),
       tag: (json['tag'] ?? '추천').toString(),
       tagLevel: _parseTagLevel(json['tagLevel']),
+      action: _parseAction(json['action']),
       reason: json['reason']?.toString(),
       relatedTodoId: json['relatedTodoId']?.toString(),
+      todoDraft: todoDraftRaw is Map
+          ? AiCoachTodoDraft.fromJson(Map<String, dynamic>.from(todoDraftRaw))
+          : null,
     );
   }
 
@@ -47,6 +60,68 @@ class AiCoachRecommendation {
       (level) => level.name == value,
       orElse: () => AiCoachTagLevel.normal,
     );
+  }
+
+  static AiCoachRecommendationAction _parseAction(dynamic raw) {
+    final value = raw?.toString();
+    return AiCoachRecommendationAction.values.firstWhere(
+      (action) => action.name == value,
+      orElse: () => AiCoachRecommendationAction.none,
+    );
+  }
+}
+
+class AiCoachTodoDraft {
+  const AiCoachTodoDraft({
+    required this.title,
+    required this.date,
+    this.priority = 'medium',
+    this.urgency = 5,
+    this.importance = 5,
+    this.tag = 'default',
+    this.time,
+    this.memo,
+  });
+
+  final String title;
+  final String date;
+  final String priority;
+  final int urgency;
+  final int importance;
+  final String tag;
+  final String? time;
+  final String? memo;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'date': date,
+      'priority': priority,
+      'urgency': urgency,
+      'importance': importance,
+      'tag': tag,
+      if (time != null) 'time': time,
+      if (memo != null) 'memo': memo,
+    };
+  }
+
+  factory AiCoachTodoDraft.fromJson(Map<String, dynamic> json) {
+    return AiCoachTodoDraft(
+      title: (json['title'] ?? '').toString(),
+      date: (json['date'] ?? '').toString(),
+      priority: (json['priority'] ?? 'medium').toString(),
+      urgency: _readScore(json['urgency'], 5),
+      importance: _readScore(json['importance'], 5),
+      tag: (json['tag'] ?? 'default').toString(),
+      time: json['time']?.toString(),
+      memo: json['memo']?.toString(),
+    );
+  }
+
+  static int _readScore(dynamic raw, int fallback) {
+    if (raw is int) return raw.clamp(1, 8).toInt();
+    if (raw is num) return raw.round().clamp(1, 8).toInt();
+    return fallback;
   }
 }
 

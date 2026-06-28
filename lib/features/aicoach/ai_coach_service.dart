@@ -101,6 +101,10 @@ class AiCoachService {
         .map((todo) => _recommendationFor(todo, todayKey))
         .toList();
 
+    if (recommendations.isEmpty && _asksForPlan(message)) {
+      recommendations.add(_draftRecommendation(message, todayKey));
+    }
+
     final content = _contentFor(
       message,
       activeTodos,
@@ -195,6 +199,7 @@ class AiCoachService {
         timeRange: '지금 바로',
         tag: '지난 마감',
         tagLevel: AiCoachTagLevel.urgent,
+        action: AiCoachRecommendationAction.completeTodo,
         reason: '마감일이 지나 우선 정리가 필요합니다.',
         relatedTodoId: todo.id,
       );
@@ -206,6 +211,7 @@ class AiCoachService {
         timeRange: todo.time ?? '오늘 안에',
         tag: '오늘 할 일',
         tagLevel: AiCoachTagLevel.scheduled,
+        action: AiCoachRecommendationAction.completeTodo,
         reason: '오늘 처리 대상입니다.',
         relatedTodoId: todo.id,
       );
@@ -217,6 +223,7 @@ class AiCoachService {
         timeRange: '집중 40분',
         tag: '중요',
         tagLevel: AiCoachTagLevel.review,
+        action: AiCoachRecommendationAction.completeTodo,
         reason: '중요도가 높아 미리 진도를 내는 편이 좋습니다.',
         relatedTodoId: todo.id,
       );
@@ -227,9 +234,40 @@ class AiCoachService {
       timeRange: '여유 시간',
       tag: '대기',
       tagLevel: AiCoachTagLevel.normal,
+      action: AiCoachRecommendationAction.completeTodo,
       reason: '긴급한 항목 뒤에 처리하면 됩니다.',
       relatedTodoId: todo.id,
     );
+  }
+
+  AiCoachRecommendation _draftRecommendation(String message, String todayKey) {
+    final title = message.contains('시험') || message.contains('공부')
+        ? '핵심 개념 40분 복습'
+        : '오늘 할 일 1개 정리';
+    return AiCoachRecommendation(
+      title: title,
+      timeRange: '오늘 안에',
+      tag: '새 할 일',
+      tagLevel: AiCoachTagLevel.review,
+      action: AiCoachRecommendationAction.createTodo,
+      reason: '현재 남은 할 일이 없어 바로 실행할 수 있는 작은 할 일을 추천합니다.',
+      todoDraft: AiCoachTodoDraft(
+        title: title,
+        date: todayKey,
+        priority: 'medium',
+        urgency: 5,
+        importance: 6,
+        memo: 'AI 코치 추천',
+      ),
+    );
+  }
+
+  bool _asksForPlan(String message) {
+    return message.contains('추천') ||
+        message.contains('계획') ||
+        message.contains('뭐') ||
+        message.contains('할 일') ||
+        message.contains('공부');
   }
 
   bool _isOverdue(TodoItem todo, String todayKey) {

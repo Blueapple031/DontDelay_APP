@@ -63,15 +63,18 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                       Text(
                         '할 일 관리',
                         style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: cs.onSurface),
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: cs.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '할 일을 추가하고 상태를 변경하세요',
                         style: TextStyle(
-                            fontSize: 14, color: cs.onSurfaceVariant),
+                          fontSize: 14,
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -93,8 +96,11 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                         selected: {_viewMode},
                         onSelectionChanged: (s) {
                           setState(() => _viewMode = s.first);
-                          ref.read(todoViewModeProvider.notifier)
-                              .set(_viewMode == TodoViewMode.eisenhower ? 1 : 0);
+                          ref
+                              .read(todoViewModeProvider.notifier)
+                              .set(
+                                _viewMode == TodoViewMode.eisenhower ? 1 : 0,
+                              );
                         },
                         style: ButtonStyle(
                           backgroundColor: WidgetStateProperty.resolveWith(
@@ -114,8 +120,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content:
-                                  Text('AI 자동 분류 기능은 추후 구현될 예정입니다.'),
+                              content: Text('AI 자동 분류 기능은 추후 구현될 예정입니다.'),
                             ),
                           );
                         },
@@ -127,11 +132,13 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                         label: Text(
                           'AI 자동 분류',
                           style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary),
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                              color: Theme.of(context).colorScheme.primary),
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -144,8 +151,11 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                       const SizedBox(width: 12),
                       ElevatedButton.icon(
                         onPressed: () => showTodoAddDialog(context, ref),
-                        icon: const Icon(Icons.add,
-                            size: 18, color: Colors.white),
+                        icon: const Icon(
+                          Icons.add,
+                          size: 18,
+                          color: Colors.white,
+                        ),
                         label: const Text(
                           '새 할 일 추가',
                           style: TextStyle(
@@ -154,13 +164,17 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 16),
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                         ),
                       ),
                     ],
@@ -173,19 +187,22 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                 child: asyncTodos.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (e, _) =>
-                      Center(child: Text('오류가 발생했습니다: $e')),
+                  error: (e, _) => Center(child: Text('오류가 발생했습니다: $e')),
                   data: (todos) {
                     if (_viewMode == TodoViewMode.eisenhower) {
                       return TodoEisenhowerBoard(todos: todos);
                     }
-                    final tags = ref.watch(tagListProvider).value ??
+                    final tags =
+                        ref.watch(tagListProvider).value ??
                         [TagItem.defaultTag];
                     final tagMap = {for (final t in tags) t.id: t};
 
                     final today = DateTime.now();
-                    final todayStart =
-                        DateTime(today.year, today.month, today.day);
+                    final todayStart = DateTime(
+                      today.year,
+                      today.month,
+                      today.day,
+                    );
 
                     final todoItems = todos
                         .where((t) => t.status == TodoStatus.todo)
@@ -294,13 +311,11 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                           blurRadius: 10,
                           spreadRadius: 1,
                           offset: const Offset(0, 4),
-                        )
+                        ),
                       ],
                     ),
                     child: Icon(
-                      isOver
-                          ? Icons.delete_forever
-                          : Icons.delete_outline,
+                      isOver ? Icons.delete_forever : Icons.delete_outline,
                       color: isOver
                           ? Colors.red.shade600
                           : Colors.grey.shade600,
@@ -333,8 +348,9 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                 .changeStatus(details.data.id, status);
           } catch (e) {
             if (!context.mounted) return;
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('저장에 실패했습니다: $e')));
           }
         },
         builder: (context, candidateData, rejectedData) {
@@ -364,24 +380,32 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(title,
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: cs.onSurface)),
-                      Text(items.length.toString(),
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.bold)),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      Text(
+                        items.length.toString(),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Expanded(
                   child: ListView(
                     children: [
-                      ...items.map((item) =>
-                          _buildDraggableTaskCard(context, ref, item, tagMap)),
+                      ...items.map(
+                        (item) =>
+                            _buildDraggableTaskCard(context, ref, item, tagMap),
+                      ),
                       if (status != TodoStatus.done)
                         _buildAddCardButton(context, ref, status),
                     ],
@@ -454,15 +478,17 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     bool includeMargin = true,
   }) {
     final cs = Theme.of(context).colorScheme;
-    final tag = tagMap[item.tag] ?? TagItem.defaultTag;
+    final tag =
+        tagMap[item.tag] ?? tagMap[TagItem.defaultId] ?? TagItem.defaultTag;
     final tagColor = hexToColor(tag.colorHex);
 
     final dateLabel = _fmtDateDisplay(item.date);
     final timeLabel = item.time != null ? ' ${item.time}' : '';
 
     return Container(
-      margin:
-          includeMargin ? const EdgeInsets.only(bottom: 12) : EdgeInsets.zero,
+      margin: includeMargin
+          ? const EdgeInsets.only(bottom: 12)
+          : EdgeInsets.zero,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
@@ -494,8 +520,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: tagColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
@@ -543,7 +568,9 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
             child: Text(
               '+ 카드 추가',
               style: TextStyle(
-                  color: Colors.grey.shade500, fontWeight: FontWeight.bold),
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -577,7 +604,10 @@ class _CustomPaintDecorationPainter extends BoxPainter {
   final List<double> dashPattern;
 
   _CustomPaintDecorationPainter(
-      this.border, this.borderRadius, this.dashPattern);
+    this.border,
+    this.borderRadius,
+    this.dashPattern,
+  );
 
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {

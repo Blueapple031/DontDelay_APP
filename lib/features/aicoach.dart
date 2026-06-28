@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'aicoach/ai_coach_model.dart';
 import 'aicoach/ai_coach_provider.dart';
+import 'todo/tag_model.dart';
+import 'todo/tag_provider.dart';
 import 'todo/todo_model.dart';
 import 'todo/todo_provider.dart';
 
@@ -16,6 +18,7 @@ class AiCoachScreen extends ConsumerStatefulWidget {
 class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final Set<String> _appliedRecommendationKeys = {};
 
   @override
   void dispose() {
@@ -41,6 +44,9 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
           .read(todoListProvider.notifier)
           .changeStatus(todoId, TodoStatus.done);
       if (!mounted) return;
+      setState(() {
+        _appliedRecommendationKeys.add(_recommendationKey(item));
+      });
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('"${item.title}"을 완료 처리했습니다.')));
@@ -50,6 +56,83 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text('할 일을 완료 처리하지 못했습니다.')));
     }
+  }
+
+  Future<void> _createTodoFromRecommendation(AiCoachRecommendation item) async {
+    final draft = item.todoDraft;
+    if (draft == null ||
+        draft.title.trim().isEmpty ||
+        draft.date.trim().isEmpty) {
+      return;
+    }
+
+    try {
+      final tagId = await _tagIdFromDraft(draft.tag);
+      await ref
+          .read(todoListProvider.notifier)
+          .addTodo(
+            TodoItem(
+              title: draft.title.trim(),
+              date: draft.date,
+              priority: _priorityFromDraft(draft.priority),
+              tag: tagId,
+              status: TodoStatus.todo,
+              urgency: draft.urgency,
+              importance: draft.importance,
+              time: draft.time,
+              memo: draft.memo,
+            ),
+          );
+      if (!mounted) return;
+      setState(() {
+        _appliedRecommendationKeys.add(_recommendationKey(item));
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('"${draft.title}"을 할 일에 추가했습니다.')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('할 일을 추가하지 못했습니다.')));
+    }
+  }
+
+  TodoPriority _priorityFromDraft(String raw) {
+    return TodoPriority.values.firstWhere(
+      (priority) => priority.name == raw,
+      orElse: () => TodoPriority.medium,
+    );
+  }
+
+  Future<String> _tagIdFromDraft(String raw) async {
+    final tag = raw.trim();
+    final tags = await ref.read(tagListProvider.future);
+    if (tag.isEmpty ||
+        tag == TagItem.defaultId ||
+        tag == '기본값' ||
+        tag == '기본') {
+      return TagItem.defaultId;
+    }
+    for (final item in tags) {
+      if (item.id == tag || item.name == tag) return item.id;
+    }
+    return tag;
+  }
+
+  bool _isRecommendationApplied(AiCoachRecommendation item) {
+    return _appliedRecommendationKeys.contains(_recommendationKey(item));
+  }
+
+  String _recommendationKey(AiCoachRecommendation item) {
+    return switch (item.action) {
+      AiCoachRecommendationAction.completeTodo =>
+        'complete:${item.relatedTodoId ?? item.title}',
+      AiCoachRecommendationAction.createTodo =>
+        'create:${item.todoDraft?.title ?? item.title}:${item.todoDraft?.date ?? ''}',
+      AiCoachRecommendationAction.none =>
+        'none:${item.title}:${item.timeRange}',
+    };
   }
 
   void _scrollToBottom() {
@@ -128,6 +211,9 @@ class _AiCoachScreenState extends ConsumerState<AiCoachScreen> {
                         return _ChatMessageBubble(
                           message: state.messages[index],
                           onCompleteRecommendation: _completeRecommendation,
+                          onCreateTodoRecommendation:
+                              _createTodoFromRecommendation,
+                          isRecommendationApplied: _isRecommendationApplied,
                         );
                       },
                     ),
@@ -230,10 +316,14 @@ class _ChatMessageBubble extends StatelessWidget {
   const _ChatMessageBubble({
     required this.message,
     required this.onCompleteRecommendation,
+    required this.onCreateTodoRecommendation,
+    required this.isRecommendationApplied,
   });
 
   final AiCoachMessage message;
   final ValueChanged<AiCoachRecommendation> onCompleteRecommendation;
+  final ValueChanged<AiCoachRecommendation> onCreateTodoRecommendation;
+  final bool Function(AiCoachRecommendation item) isRecommendationApplied;
 
   @override
   Widget build(BuildContext context) {
@@ -299,14 +389,14 @@ class _ChatMessageBubble extends StatelessWidget {
                         ),
                         if (message.recommendations.isNotEmpty) ...[
                           const SizedBox(height: 16),
-                          ...message.recommendations.map(
-                            (item) => _RecommendationCard(
+                          ...message.recommendations.map((item) {
+                            final isApplied = isRecommendationApplied(item);
+                            return _RecommendationCard(
                               item: item,
-                              onComplete: item.relatedTodoId == null
-                                  ? null
-                                  : () => onCompleteRecommendation(item),
-                            ),
-                          ),
+                              isApplied: isApplied,
+                              onAction: isApplied ? null : _actionFor(item),
+                            );
+                          }),
                         ],
                       ],
                     ),
@@ -328,6 +418,18 @@ class _ChatMessageBubble extends StatelessWidget {
     );
   }
 
+  VoidCallback? _actionFor(AiCoachRecommendation item) {
+    return switch (item.action) {
+      AiCoachRecommendationAction.completeTodo =>
+        item.relatedTodoId == null
+            ? null
+            : () => onCompleteRecommendation(item),
+      AiCoachRecommendationAction.createTodo =>
+        item.todoDraft == null ? null : () => onCreateTodoRecommendation(item),
+      AiCoachRecommendationAction.none => null,
+    };
+  }
+
   static String _formatTime(DateTime time) {
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
@@ -336,10 +438,15 @@ class _ChatMessageBubble extends StatelessWidget {
 }
 
 class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({required this.item, required this.onComplete});
+  const _RecommendationCard({
+    required this.item,
+    required this.isApplied,
+    required this.onAction,
+  });
 
   final AiCoachRecommendation item;
-  final VoidCallback? onComplete;
+  final bool isApplied;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -417,18 +524,62 @@ class _RecommendationCard extends StatelessWidget {
               ],
             ),
           ),
-          Tooltip(
-            message: onComplete == null ? '연결된 할 일이 없습니다' : '완료 처리',
-            child: IconButton(
-              onPressed: onComplete,
-              icon: const Icon(Icons.check_circle_outline),
-              color: onComplete == null ? scheme.outline : scheme.primary,
-              visualDensity: VisualDensity.compact,
+          if (!_shouldHideAction)
+            Tooltip(
+              message: _actionTooltip,
+              child: IconButton(
+                onPressed: onAction,
+                icon: Icon(_actionIcon),
+                color: isApplied
+                    ? scheme.primary
+                    : onAction == null
+                    ? scheme.outline
+                    : scheme.primary,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
-          ),
         ],
       ),
     );
+  }
+
+  bool get _shouldHideAction {
+    return isApplied && item.action == AiCoachRecommendationAction.completeTodo;
+  }
+
+  IconData get _actionIcon {
+    if (isApplied && item.action == AiCoachRecommendationAction.createTodo) {
+      return Icons.check_circle_outline;
+    }
+
+    return switch (item.action) {
+      AiCoachRecommendationAction.completeTodo => Icons.check_circle_outline,
+      AiCoachRecommendationAction.createTodo => Icons.add_task,
+      AiCoachRecommendationAction.none => Icons.info_outline,
+    };
+  }
+
+  String get _actionTooltip {
+    if (isApplied) {
+      return switch (item.action) {
+        AiCoachRecommendationAction.completeTodo => '완료됨',
+        AiCoachRecommendationAction.createTodo => '추가됨',
+        AiCoachRecommendationAction.none => '적용됨',
+      };
+    }
+
+    if (onAction == null) {
+      return switch (item.action) {
+        AiCoachRecommendationAction.completeTodo => '연결된 할 일이 없습니다',
+        AiCoachRecommendationAction.createTodo => '추가할 할 일 정보가 없습니다',
+        AiCoachRecommendationAction.none => '실행할 수 있는 동작이 없습니다',
+      };
+    }
+    return switch (item.action) {
+      AiCoachRecommendationAction.completeTodo => '완료 처리',
+      AiCoachRecommendationAction.createTodo => '할 일 추가',
+      AiCoachRecommendationAction.none => '실행',
+    };
   }
 }
 
